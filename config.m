@@ -2,21 +2,27 @@
 function [TG, KC, PreLD, LD, TL, POI, N, T_custom] = config()
 %% GUI INPUTS
 TG = KC_TOG;
+
 TG.solve_nominal = 0;              % Control if Nominal simulation runs
 TG.solve_specific = 1;             % Control if Specific simulation runs
 TG.solve_montecarlo = 0;           % Control if MonteCarlo simulation runs
 TG.solve_covariance = 0;           % Control if Covariance simulation runs
+
 TG.rotinputs = 0;                  % Control if inputs are transformed by inR and inP values.
-TG.rot_applied_load_pos = 0;       % Control if applied load is rotated. Helpful if test Csys is different from program input Csys.
+TG.rot_applied_load_pos = 0;       % Control if applied load is rotated from input Csys to Slo Csys. Helpful if troubleshooting Csys is different from program input Csys.
 TG.FL_is_Coupling_Centroid = 0;    % Control if F_L is located at coupling centroid
 TG.F_P_is_equal = 2;               % Control if all F_P magnitudes are equal. 1 for all equal, 0 for specific vectors, 2 for solve via superpositon of load in first column
 TG.mat_lib_external = 0;           % Control if external imported material library is used, else use default
-TG.solve_in_input_csys = 0;        % Control if plots and results are in input coordinate system
+
+TG.solve_in_input_csys = 1;        % Control if plots and results are in input coordinate system
 TG.solve_in_custom_csys = 0;       % Control if plots and results are in custom coordinate system
-TG.solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system
+TG.solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
+
 TG.subtract_preload_deflection = 1;% Control if preload deflection is subtracted from clamp force induced error to simulate only loading and unloading clamp.
+
 TG.visualize_in_blender = 0;       % Control if visualization in blender is turned on
-TG.visualize_resultant_forces = 1; % Control if resultant forces are calculated and displayed in blender viewport
+TG.visualize_resultant_forces = 0; % Control if resultant forces are calculated and displayed in blender viewport
+
 TG.threeD_coupling = 1;            % Control if 3D coupling is enabled. Save calculation speed by only enabling when vee_reorient vectors are used
 TG.time_script = 0;                % Control if script is timed
 TG.verify_inputs = 0;              % Control if inputs are verified before running the script
@@ -37,7 +43,7 @@ KC_type = 3; % Control type of KC, 0 for angular symmetry, 1 for isosceles, 2 fo
 % Type 1 use KC_radius(1) for triangle base and KC_radius(2) for height
 % Type 2 use KC_radius(1) for triangle base
 % Type 3 ignore KC_radius and use custom input (KC_custom_Pct)
-KC_radius = [138,138];
+KC_radius = [138,200];
 
 % - Optional Rotation of KC from Input Csys. 
 % Generally used for transforming a simple system such as symmetric 90
@@ -60,21 +66,22 @@ Ball_R2 = 100 * ones(1,3);               % [mm] Ball major radii if using canoe 
 V_groove_ang = 90*ones(1,3);      % [deg] Nominal Vee Groove Angles
 Vee_rad = 1e10*[1,1]';            % [mm], Large radius for vee groove -> flat, Rxx, Ryy
 Vh = 0*ones(1,3);                 % [mm] vee hieght
-vee_reorient = [pi/2 0 63*pi/360-pi/4; -pi/2 0 -63*pi/360+pi/4; 0 0 0]; % [rad], controls vee orientation, [0,0,0] is vee pointing towards centroid. CHECK INPUT CSYS
+vee_reorient = [pi/2 0 0; -pi/2 0 0; 0 0 0]; % [rad], controls vee orientation, [0,0,0] is vee pointing towards centroid. CHECK INPUT CSYS
 %% Forces
-F_PL = [0 -51.5 0; ... % F_PL are preload force vectors
+F_PL = [51.5 0 0; ... % F_PL are preload force vectors
         0 0 0;
         0 0 0]';
-F_PL_loc = [0 -23 71.42; ... % F_PL_loc are preload force position vectors relative to each ball center [x1, y1, z1; x2 ...]
+F_PL_loc = [0 0 71.42; ... % F_PL_loc are preload force position vectors relative to each ball center [x1, y1, z1; x2 ...]
             0 0 0;
             0 0 0]';
 M_PL = [0,0,0]'; % M_PL is list of clamp preload moments applied to the ball pallet
-F_L = [0 -133.5 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
+% F_L = [44.5 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
+F_L = [138 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 M_L = [0,0,0]'; % M_L is list of clamp moments applied to the ball pallet
 F_L_loc = [0,0,225.5-71.42]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
 
 F_L_loc_Rot = Tform(pi/6, 3); % If F_L_loc is to be rotated, use this transform matrix.
-% - Optional masses for heavy clamps. Use of mass as preload currently unsupported.
+% - Optional masses for heavy clamps.
 mass_ball_plate = 0;
 COM_ball_plate = [0,0,0]';
 mass_vee_plate = 0;
@@ -105,6 +112,7 @@ FL_loc_tol = [0,0,0];   % mm
 %% Solver Inputs
 F_balance_tol = 0.01; % 1% Tolerance since iterative solving unlikely to return exact value
 %% MonteCarlo
+
 N = 10; % Samples
 %% Custom Csys Solution relative to input csys
 T_custom = eye(4);
@@ -119,10 +127,8 @@ end
 C = incenter_solve(N_tri); % Solve Incenter
 if (TG.rotinputs)
     % Transform
-    % T_rot_inputs = Trans(-C)Rotz(Rz)Roty(Ry)Rotx(Rx)Trans(C)Trans(P)
     inputRotate = Tform(inRz,3) * Tform(inRy,2) * Tform(inRx,1); % Rotation Only
     inputTranRot = Tform(-C,0) * inputRotate * Tform(C+inP,0); % Transformation
-    inputTrans = Tform(inP,0);
     N_tri = data_transform(inputTranRot,N_tri')';
     F_L_loc = F_L_loc + inP;
     F_L = data_transform(inputRotate,F_L')';
@@ -135,12 +141,15 @@ if (TG.rotinputs)
     C = incenter_solve(N_tri); % Solve Incenter if New
 end
 if(~TG.threeD_coupling)
-    vee_reorient = zeros(3,3);
+    vee_reorient = zeros(3);
 end
 if (TG.rot_applied_load_pos) % If input force location is to be rotated, rotate the input force location and tolerance.
+ 
+
     F_L_loc = data_transform(F_L_loc_Rot, F_L_loc')';
     F_L_tol = data_transform(F_L_loc_Rot, F_L_tol);
 end
+
 %% Defining Objects
 
 % DO NOT EDIT THIS SECTION. ALL INPUTS ABOVE.    

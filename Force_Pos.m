@@ -16,8 +16,8 @@ if (tg.solve_montecarlo)
    kc_ld.Ld.P = normrnd(kc_ld.Ld.P, tl.F_L'/3);
    kc_ld.Ld.P_loc = normrnd(kc_ld.Ld.P_loc, tl.FL_loc'/3);   
 elseif (tg.solve_specific)
-   kc_ld.Ld.P = kc_ld.Ld.P + tl.F_L'/3;
-   kc_ld.Ld.P_loc = kc_ld.Ld.P_loc + tl.FL_loc'/3;   
+   kc_ld.Ld.P = kc_ld.Ld.P + tl.F_L';
+   kc_ld.Ld.P_loc = kc_ld.Ld.P_loc + tl.FL_loc';   
 else
    kc_ld.Ld.P = kc_ld.Ld.P;
    kc_ld.Ld.P_loc = kc_ld.Ld.P_loc;   

@@ -1,8 +1,8 @@
 %% KC_SOLVER.m
-% Revision:     1
+% Revision:     1.2
 % Author:       Tyler A. Seawright
 % Created:      10/24/23
-% Last Updated: 3/11/24
+% Last Updated: 4/3/24
 %% AUTHOR'S NOTE
 % This script was created through the work of Dr. Alexander Slocum, Michel
 % Pharand, and Tyler Seawright. With this script, 2D and 3D kinematic
@@ -26,12 +26,6 @@ if(~verify_tri(kc_in.Pct))
     return
 end
 %% INIT
-% Set all applied loads positions to coupling centroid if toggled.
-if(tg.FL_is_Coupling_Centroid) 
-    for i = 1:length(ld_in)
-        kc_in.Ld.P_loc = zeros(3,1);
-    end
-end
 
 % Set all preload forces to equal vectors if toggled.
 if(tg.F_P_is_equal==1)
@@ -41,9 +35,15 @@ if(tg.F_P_is_equal==1)
         end
     end
 end
+if (tg.FL_is_Coupling_Centroid)
+   kc_in.Ld.P_loc = kc_in.C;
+end
+if (~tg.canoe_ball) % If canoe ball is not used, set ball R2 to ball R1
+   kc_in.Rb2 = kc_in.Db/2;
+end
 
 % Set materials for ball and vee from external library if toggled.
-% (Unsupported)
+% (Unsupported) Set materials manually in config file.
 if (tg.mat_lib_external)
     % Set materials from external library
 else
@@ -52,7 +52,6 @@ end
 %% PRE-RUN PRINTS
 % - Verification of Inputs (DEBUG)
 % kc_in.Pct; kc_in.C;
-% kc_plot_input_geometry(kc_in, "KC SYTEM PLOT INPUT CSYS")
 %% INPUT VERIFICATION DIALOGUE BOX
 % Ask the user whether to continue or not using the dialog box
 if (tg.verify_inputs)
@@ -78,11 +77,10 @@ end
 T_GC_inv = inv(T_GC);
 if(tg.solve_in_custom_csys)
     T_Q = T_GC_inv * T_custom;
+elseif(tg.solve_in_input_csys)
+    T_Q = T_GC_inv;
 else
     T_Q = eye(4);
-end
-if(tg.solve_in_input_csys)
-    T_Q = T_GC_inv;
 end
 
 %% BLENDER VISUALIZATION
@@ -110,7 +108,7 @@ if (tg.solve_specific)
     % kc_sg.Pb, kc_sg.C
     % kc_sf.Pb, kc_sf.C, kc_sf.RP, kc_sf.T_GC_BC, kc_sf.dPb
     
-    % Vertical KC Experiment Verification ..................
+    % % Vertical KC Experiment Verification ..................
     % C = kc_sf.C
     % RP = kc_sf.RP' % Reaction Forces
     % dPb = 1000* kc_sf.dPb %[um]

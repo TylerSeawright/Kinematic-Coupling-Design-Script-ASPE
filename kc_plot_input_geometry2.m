@@ -81,9 +81,9 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
     % Plot Coupling Triangle
     plot3([Pb(1,1:3), Pb(1,1)], [Pb(2,1:3),Pb(2,1)], [Pb(3,1:3), Pb(3,1)],'-b'); % Plot Coupling Triangle
     % Plot Coupling Centroid
-    % plot3(C(1),C(2), C(3),'+g', 'MarkerSize', 15);
+    plot3(C(1),C(2), C(3),'og', 'MarkerSize', 10);
     plot3(BC_Csys(1,:),BC_Csys(2,:),BC_Csys(3,:),'-g', 'LineWidth', 3)
-    text(C(1) + bl_offset, C(2) + bl_offset, C(3) + bl_offset, "C", 'color', 'g')
+    text(C(1) - bl_offset, C(2) - bl_offset, C(3), "C", 'color', 'k')
     % Plot Preload Forces
     % for i = 1:3
     % plot3(PL_scale{i}(1,:),PL_scale{i}(2,:),PL_scale{i}(3,:), '-k', 'LineWidth', 2)

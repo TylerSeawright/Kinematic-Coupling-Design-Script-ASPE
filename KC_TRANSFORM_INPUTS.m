@@ -8,7 +8,8 @@ kc_B = kc_A; tl_B = tl_A;
 
 % Solve transformation from arbitrary positions to solution space. All
 % balls on XY plane, third ball on x axis, coupling centroid at origin.
-T_A_B = orientTriangle(kc_A.Pct, kc_A.C, [0,0,0], [0,0,1], [0,1,0]);
+% orientTriangle(Ball Centers, triangle incenter)
+T_A_B = orientTriangle(kc_A.Pct, kc_A.C);
 
 % Apply transformation.
 kc_B.Pct = data_transform(T_A_B, kc_A.Pct')';
@@ -27,14 +28,12 @@ kc_B.C = incenter_solve(kc_B.Pct);
 
 % Orientation defines the ball coordinate system orientation about Z axis on XY plane such that X
 % axis points towards coupling centroid.
-or = zeros(1,3);
 for i = 1:3
-    or(i) = atan2(kc_B.C(2) - kc_B.Pct(2,i), kc_B.C(1) - kc_B.Pct(1,i));
-    if or(i) < 0 % If orientation angle is negative, change to positive angle
-        or(i) = or(i) + 2*pi; % Return negative angle as positive [0,2pi]
+    kc_B.or(i) = atan2(kc_B.C(2) - kc_B.Pct(2,i), kc_B.C(1) - kc_B.Pct(1,i));
+    if kc_B.or(i) < 0 % If orientation angle is negative, change to positive angle
+        kc_B.or(i) = kc_B.or(i) + 2*pi; % Return negative angle as positive [0,2pi]
     end
 end
-kc_B.or = or;
 
 kc_B.T_Vees = vee_plane_transform(kc_B.Pct, kc_B.Db, kc_B.Vg/2, kc_B.or, kc_B.Vreo);
 

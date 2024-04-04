@@ -3,13 +3,6 @@
 function [kc_g, kc_f, T_Tot] = KC_COUPLING(tg, kc, tl, T_Q)
     
     %% INIT INPUT VARIABLES
-    if (tg.FL_is_Coupling_Centroid)
-       kc.Ld.P_loc = kc.C;
-    end
-
-    if (~tg.canoe_ball) % If canoe ball is not used, set ball R2 to ball R1
-       kc.Rb2 = kc.Db/2;
-    end
     
     %% KC VARIATION SETUP
 Halfa_nom = (kc.Vg / 2) * pi/180; % Half angles of vee groove defined by V_groove_ang
@@ -93,8 +86,10 @@ end
         end
         for j = 1:3
             T_reo_rot = T_reo{j};
-            T_reo_rot(1:3,4) = zeros(3,1);
-            % kc_g.Preld{j}.P = data_transform(T_reo_rot, kc_g.Preld{j}.P')'; 
+            T_reo_rot(1:3,4) = zeros(3,1); % Transform preloads about ball centers.
+            if (tg.F_P_is_equal ~= 2)
+                kc_g.Preld{j}.P = data_transform(T_reo_rot, kc_g.Preld{j}.P')'; 
+            end
         end
     else
         % Solve system of equations numerically to return contact points.
