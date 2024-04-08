@@ -18,7 +18,7 @@ tic
 %% INPUTS
 % Get all inputs from config file. Edit config file.
 [tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom] = config();
-%% CODE INPUT VERIFICATION
+%% BALL CENTER INPUT VERIFICATION
 % Verify ball centers forms a triangle. If a ball falls on the line formed
 % by the two other balls then end script.
 if(~verify_tri(kc_in.Pct))
@@ -42,13 +42,6 @@ if (~tg.canoe_ball) % If canoe ball is not used, set ball R2 to ball R1
    kc_in.Rb2 = kc_in.Db/2;
 end
 
-% Set materials for ball and vee from external library if toggled.
-% (Unsupported) Set materials manually in config file.
-if (tg.mat_lib_external)
-    % Set materials from external library
-else
-    % materials internal
-end
 %% PRE-RUN PRINTS
 % - Verification of Inputs (DEBUG)
 % kc_in.Pct; kc_in.C;
@@ -130,7 +123,7 @@ if (tg.solve_specific)
     % ......................................................
 
     % Plot Geometry
-    kc_plot_input_geometry2(kc_sf, tg, "KC Specific SYTEM PLOT GC CSYS");
+    kc_plot_input_geometry2(kc_sf, tg, "KC Free Body Diagram");
 end
 %% MONTECARLO SIMULATION
 if (tg.solve_montecarlo)

@@ -7,7 +7,6 @@ classdef KC_TOG
     solve_montecarlo = 0;           % Control if MonteCarlo simulation runs
     solve_covariance = 0;           % Control if Covariance simulation runs
     rotinputs = 0;                  % Control if inputs are transformed by inR and inP values.
-    rot_applied_load_pos = 0;       % Control if applied load is rotated. Helpful if test Csys is different from program input Csys.
     exact_contacts = 0;             % Control if exact contacts are used. WARNING, bypasses geometric error solution.
     FL_is_Coupling_Centroid = 0;    % Control if F_L is located at coupling centroid
     F_P_is_equal = 0;               % Control if all F_P magnitudes are equal. 1 for all equal, 0 for specific vectors, 2 for solve via superpositon of load in first column

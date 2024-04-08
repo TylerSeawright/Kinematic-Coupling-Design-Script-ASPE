@@ -9,12 +9,11 @@ TG.solve_montecarlo = 0;           % Control if MonteCarlo simulation runs
 TG.solve_covariance = 0;           % Control if Covariance simulation runs
 
 TG.rotinputs = 0;                  % Control if inputs are transformed by inR and inP values.
-TG.rot_applied_load_pos = 0;       % Control if applied load is rotated from input Csys to Slo Csys. Helpful if troubleshooting Csys is different from program input Csys.
 TG.FL_is_Coupling_Centroid = 0;    % Control if F_L is located at coupling centroid
 TG.F_P_is_equal = 2;               % Control if all F_P magnitudes are equal. 1 for all equal, 0 for specific vectors, 2 for solve via superpositon of load in first column
 TG.mat_lib_external = 0;           % Control if external imported material library is used, else use default
 
-TG.solve_in_input_csys = 1;        % Control if plots and results are in input coordinate system
+TG.solve_in_input_csys = 0;        % Control if plots and results are in input coordinate system
 TG.solve_in_custom_csys = 0;       % Control if plots and results are in custom coordinate system
 TG.solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
 
@@ -26,7 +25,7 @@ TG.visualize_resultant_forces = 0; % Control if resultant forces are calculated 
 TG.threeD_coupling = 1;            % Control if 3D coupling is enabled. Save calculation speed by only enabling when vee_reorient vectors are used
 TG.time_script = 0;                % Control if script is timed
 TG.verify_inputs = 0;              % Control if inputs are verified before running the script
-TG.bypass_errors = 1;              % Control if error messages are bypassed. Use at your own risk.
+TG.bypass_errors = 0;              % Control if error messages are bypassed. Use at your own risk.
 TG.solve_force_location_boundary = 0;  % Control if force location bounds are solved that induce clamp separation.
 TG.bypass_geometric_variance = 1;  % Control if nominal geometry resting position is solved analytically rather than numerically. 
 
@@ -48,7 +47,7 @@ KC_radius = [138,200];
 % - Optional Rotation of KC from Input Csys. 
 % Generally used for transforming a simple system such as symmetric 90
 % degrees.
-inRx = 0; inRy = 0; inRz = 0; % Rotation Angles
+inRx = 0; inRy = pi/3; inRz = pi; % Rotation Angles
 inP = [0,0,0]'; % Transformation Vector
 %% - Geometry
 % [mm] Nominal Coordinates of each ball center (triangle) in the 
@@ -92,10 +91,7 @@ poi = [10,0,0; ...
 poi_uncertainty = 0.00 * ones(size(poi)); % POI uncertainty [mm] set of points relative to coupling centroid by application assembly
 %% Materials
 mu_f = 0;               % Coeff of friction between ball and vee materials, 0 for no friction
-mat_index = [1,1];      % Variable to store which rows of material lib used
-    % Default Internal Materials
-mat_ball = [2.04e11, 2.76e8, 2.59e10, 2.07e8, 0.29];    % Steel, Material Property Organized [E, sig_y, G, sig_G, v]
-mat_vee = mat_ball;    % Steel
+mat_index = [5,5];      % Variable to store which rows of material lib used. First index is ball, second is vee.
 sig_y_SF = 1.0; % Yield Stress Safety Factor
 sig_tau_SF = 1.0; % Shear Stress Safety Factor
 %% Tolerances
@@ -109,10 +105,7 @@ Halfa_tol = [0,0,0];    % rad
 F_L_tol = [0,0,0];      % N
 F_P_tol = [0,0,0];      % N
 FL_loc_tol = [0,0,0];   % mm
-%% Solver Inputs
-F_balance_tol = 0.01; % 1% Tolerance since iterative solving unlikely to return exact value
 %% MonteCarlo
-
 N = 10; % Samples
 %% Custom Csys Solution relative to input csys
 T_custom = eye(4);
@@ -124,14 +117,16 @@ if KC_type ~= 3
 else
     N_tri = KC_custom_Pct;
 end
-C = incenter_solve(N_tri); % Solve Incenter
 if (TG.rotinputs)
     % Transform
     inputRotate = Tform(inRz,3) * Tform(inRy,2) * Tform(inRx,1); % Rotation Only
-    inputTranRot = Tform(-C,0) * inputRotate * Tform(C+inP,0); % Transformation
+    inputTran = Tform(inP,0);
+    inputTranRot = inputTran * inputRotate; % Transformation
     N_tri = data_transform(inputTranRot,N_tri')';
-    F_L_loc = F_L_loc + inP;
-    F_L = data_transform(inputRotate,F_L')';
+    F_L_loc = data_transform(inputTranRot, F_L_loc')';
+    % F_L = data_transform(inputRotate,F_L')';
+    F_PL_loc = data_transform(inputTranRot, F_PL_loc')';
+    % F_PL = data_transform(inputRotate,F_PL')';
 
     FL_loc_tol = data_transform(inputTranRot,FL_loc_tol);
     F_L_tol = data_transform(inputRotate,F_L_tol);
@@ -139,17 +134,16 @@ if (TG.rotinputs)
     V_pos_tol = data_transform(inputTranRot,V_pos_tol);
 
     C = incenter_solve(N_tri); % Solve Incenter if New
+else
+    C = incenter_solve(N_tri); % Solve Incenter
 end
+
 if(~TG.threeD_coupling)
     vee_reorient = zeros(3);
 end
-if (TG.rot_applied_load_pos) % If input force location is to be rotated, rotate the input force location and tolerance.
- 
 
-    F_L_loc = data_transform(F_L_loc_Rot, F_L_loc')';
-    F_L_tol = data_transform(F_L_loc_Rot, F_L_tol);
-end
-
+%% Set Materials
+[mat_ball, mat_vee] = Import_Materials(mat_index,TG.mat_lib_external);    % Steel, Material Property Organized [E, sig_y, G, sig_G, v]
 %% Defining Objects
 
 % DO NOT EDIT THIS SECTION. ALL INPUTS ABOVE.    

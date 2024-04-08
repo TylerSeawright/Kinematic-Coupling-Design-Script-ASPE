@@ -1,11 +1,16 @@
 %% KC_SOLVER.m
-% Revision:     1
+% Revision:     1.2
 % Author:       Tyler A. Seawright
 % Created:      10/24/23
-% Last Updated: 3/11/24
+% Last Updated: 4/3/24
+%% AUTHOR'S NOTE
 % This script was created through the work of Dr. Alexander Slocum, Michel
 % Pharand, and Tyler Seawright. With this script, 2D and 3D kinematic
-% couplings consisting of th
+% couplings consisting of three balls and three vees may be solved. Use to
+% determine contact points, contact forces, contact stresses, deformations, and run sensitivity analyses. 
+% 
+% Edit the config file to change the input parameters. Some features are
+% not supported and those are listed. 
 %% CLEANUP
 clc, clear, close all
 % Timing
@@ -13,7 +18,7 @@ tic
 %% INPUTS
 % Get all inputs from config file. Edit config file.
 [tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom] = config();
-%% CODE INPUT VERIFICATION
+%% BALL CENTER INPUT VERIFICATION
 % Verify ball centers forms a triangle. If a ball falls on the line formed
 % by the two other balls then end script.
 if(~verify_tri(kc_in.Pct))
@@ -21,12 +26,6 @@ if(~verify_tri(kc_in.Pct))
     return
 end
 %% INIT
-% Set all applied loads positions to coupling centroid if toggled.
-if(tg.FL_is_Coupling_Centroid) 
-    for i = 1:length(ld_in)
-        kc_in.Ld.P_loc = zeros(3,1);
-    end
-end
 
 % Set all preload forces to equal vectors if toggled.
 if(tg.F_P_is_equal==1)
@@ -36,18 +35,16 @@ if(tg.F_P_is_equal==1)
         end
     end
 end
-
-% Set materials for ball and vee from external library if toggled.
-% (Unsupported)
-if (tg.mat_lib_external)
-    % Set materials from external library
-else
-    % materials internal
+if (tg.FL_is_Coupling_Centroid)
+   kc_in.Ld.P_loc = kc_in.C;
 end
+if (~tg.canoe_ball) % If canoe ball is not used, set ball R2 to ball R1
+   kc_in.Rb2 = kc_in.Db/2;
+end
+
 %% PRE-RUN PRINTS
 % - Verification of Inputs (DEBUG)
 % kc_in.Pct; kc_in.C;
-% kc_plot_input_geometry(kc_in, "KC SYTEM PLOT INPUT CSYS")
 %% INPUT VERIFICATION DIALOGUE BOX
 % Ask the user whether to continue or not using the dialog box
 if (tg.verify_inputs)
@@ -72,12 +69,11 @@ end
 % Rotate inputs back to input cys for verification.
 T_GC_inv = inv(T_GC);
 if(tg.solve_in_custom_csys)
-    T_Q = T_GC_inv * T_custom;
+    T_Q = T_GC \ T_custom;
+elseif(tg.solve_in_input_csys)
+    T_Q = T_GC_inv;
 else
     T_Q = eye(4);
-end
-if(tg.solve_in_input_csys)
-    T_Q = T_GC_inv;
 end
 
 %% BLENDER VISUALIZATION
@@ -104,26 +100,28 @@ if (tg.solve_specific)
     [kc_sg, kc_sf, T_sgf_GC_BC] = KC_COUPLING(tg, kc_s, tl_in, T_Q);
     % kc_sg.Pb, kc_sg.C
     % kc_sf.Pb, kc_sf.C, kc_sf.RP, kc_sf.T_GC_BC, kc_sf.dPb
-    C = kc_sf.C
-    RP = kc_sf.RP' % Reaction Forces
-    dPb = 1000* kc_sf.dPb %[um]
     
-    % Vertical KC Experiment Verification ..................
-    T_exp = Tform(-pi/2,1)*Tform(-pi/2,3); % Experiment Csys
-    T1_exp = T_exp * Tform(pi/2,3); % Sensor 1 Csys
-    T2_exp = T_exp * Tform(-pi/2,3); % Sensor 2 Csys
-    dPbe(:,1) = data_transform(T1_exp, dPb(:,1)')'; % dPb 1
-    dPbe(:,2) = data_transform(T2_exp, dPb(:,2)')'; % dPb 2
-    dPbe(:,3) = data_transform(T_exp, dPb(:,3)')'; % dPb 3
-    % Theoretical Sensor Values
-    Se(1) = dPbe(2,1); Se(2) = dPbe(3,1);
-    Se(3) = dPbe(3,2); Se(4) = dPbe(2,2);
-    Se(5) = dPbe(2,3); sens_val_vert_kc = Se
-    % Contact Force components
-    for i = 1:6
-        force_comp(1:3,i) = kc_sf.dc(1:3,i) * -kc_sf.RP(i);
-    end
-    contact_force_vert_kc = force_comp
+    % % Vertical KC Experiment Verification ..................
+    % C = kc_sf.C
+    % RP = kc_sf.RP' % Reaction Forces
+    % dPb = 1000* kc_sf.dPb %[um]
+    % T_exp = Tform(-pi/2,1)*Tform(-pi/2,3); % Experiment Csys
+    % T1_exp = T_exp * Tform(pi/2,3); % Sensor 1 Csys
+    % T2_exp = T_exp * Tform(-pi/2,3); % Sensor 2 Csys
+    % dPbe(:,1) = data_transform(T1_exp, dPb(:,1)')'; % dPb 1
+    % dPbe(:,2) = data_transform(T2_exp, dPb(:,2)')'; % dPb 2
+    % dPbe(:,3) = data_transform(T_exp, dPb(:,3)')'; % dPb 3
+    % % Theoretical Sensor Values
+    % Se(1) = dPbe(2,1); Se(2) = dPbe(3,1);
+    % Se(3) = dPbe(3,2); Se(4) = dPbe(2,2);
+    % Se(5) = dPbe(2,3); sens_val_vert_kc = Se
+    % % Contact Force components
+    % for i = 1:6
+    %     force_comp(1:3,i) = kc_sf.dc(1:3,i) * -kc_sf.RP(i);
+    % end
+    % contact_force_vert_kc = force_comp
+    % ......................................................
+
     % Plot Geometry
     kc_plot_input_geometry2(kc_sf, tg, "KC Specific SYTEM PLOT GC CSYS");
 end
