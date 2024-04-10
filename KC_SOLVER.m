@@ -1,3 +1,5 @@
+%% FUNCTION DEFINITION
+function [KC_og, KC_of, tg] = KC_SOLVER(tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom)
 %% KC_SOLVER.m
 % Revision:     1.2
 % Author:       Tyler A. Seawright
@@ -12,9 +14,10 @@
 % Edit the config file to change the input parameters. Some features are
 % not supported and those are listed. 
 %% CLEANUP
-clc, clear, close all
+% clc, clear, close all
+
 % Timing
-tic
+% tic
 %% INPUTS
 % Get all inputs from config file. Edit config file.
 [tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom] = config();
@@ -60,11 +63,11 @@ if (tg.verify_inputs)
 end
 
 %% GEOMETRY TRANSFORMS
-% - TRANSFORM INPUTS TO SOLUTION CSYS
 [kc_inT, tl_inT, T_GC] = KC_TRANSFORM_INPUTS(kc_in, tl_in);
 
 % Print Transformed (DEBUG)
-% kc_plot_input_geometry2(kc_inT, tg, "KC INPUT TRANSFORMED");
+% kc_plot_input_geometry2(kc_in, tg, "KC INPUT CSYS");
+% kc_plot_input_geometry2(kc_inT, tg, "KC SOLUTION CSYS");
 
 % Rotate inputs back to input cys for verification.
 T_GC_inv = inv(T_GC);
@@ -91,7 +94,8 @@ if (tg.solve_nominal)
     [kc_ng, kc_nf, T_ngf_GC_BC] = KC_COUPLING(tg, kc_nom, tl_nom, T_Q);
     % kc_ng.Pb, kc_ng.C
     % kc_nf.Pct, kc_nf.Pb, kc_nf.C, kc_nf.T_GC_BC 
-    kc_plot_input_geometry2(kc_nf, tg, "KC Nominal SYTEM PLOT GC CSYS");
+    % kc_plot_input_geometry2(kc_nf, tg, "KC Free Body Diagram");
+    KC_og = kc_ng; KC_of = kc_nf;
 end
 %% SOLVE SPECIFIC CASE
 if (tg.solve_specific)
@@ -123,7 +127,8 @@ if (tg.solve_specific)
     % ......................................................
 
     % Plot Geometry
-    kc_plot_input_geometry2(kc_sf, tg, "KC Free Body Diagram");
+    % kc_plot_input_geometry2(kc_sf, tg, "KC Free Body Diagram");
+    KC_og = kc_sg; KC_of = kc_sf;
 end
 %% MONTECARLO SIMULATION
 if (tg.solve_montecarlo)
@@ -133,6 +138,8 @@ if (tg.solve_montecarlo)
     [kc_mg{i}, kc_mf{i}, T_sgf_GC_BC{i}] = KC_COUPLING(tg, kc_mc, tl_in, T_Q);
     end
     % Statistics
+
+    KC_og = kc_mg; KC_of = kc_mf;
 end
 %% COVARIANCE ERROR SIMULATION
 % Currently unsupported
@@ -140,6 +147,7 @@ if (tg.solve_covariance)
     % Solve Covariance
 end
 %% OPTIMIZATION PROBLEMS
+% (Recommend remove for use outside of KC_SOLVER function). TS 4/9/23
 % Solve Force Position Boundary that Causes Coupling Separation
 if (tg.solve_force_location_boundary)
     % Define Optimization KC System
@@ -161,7 +169,9 @@ end
 %% SAVE INPUT/RESULTS
 %% COMPLETION
 % Timing
-if (tg.time_script)
-    script_run_time = toc
+% if (tg.time_script)
+%     script_run_time = toc;
+% end
+% disp("Program Ran Successfully")
+%% FUNCTION CLOSE
 end
-disp("Program Ran Successfully")

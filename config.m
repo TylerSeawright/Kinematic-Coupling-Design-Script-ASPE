@@ -1,40 +1,35 @@
 % Configuration File
 function [TG, KC, PreLD, LD, TL, POI, N, T_custom] = config()
 %% GUI INPUTS
-TG = KC_TOG;
+solve_nominal = 0;              % Control if Nominal simulation runs
+solve_specific = 1;             % Control if Specific simulation runs
+solve_montecarlo = 0;           % Control if MonteCarlo simulation runs
+solve_covariance = 0;           % Control if Covariance simulation runs
 
-TG.solve_nominal = 0;              % Control if Nominal simulation runs
-TG.solve_specific = 1;             % Control if Specific simulation runs
-TG.solve_montecarlo = 0;           % Control if MonteCarlo simulation runs
-TG.solve_covariance = 0;           % Control if Covariance simulation runs
+rotinputs = 1;                  % Control if inputs are transformed by inR and inP values.
+FL_is_Coupling_Centroid = 0;    % Control if F_L is located at coupling centroid
+F_P_is_equal = 2;               % Control if all F_P magnitudes are equal. 1 for all equal, 0 for specific vectors, 2 for solve via superposition of load in first column
+mat_lib_external = 0;           % Control if external imported material library is used, else use default
 
-TG.rotinputs = 0;                  % Control if inputs are transformed by inR and inP values.
-TG.FL_is_Coupling_Centroid = 0;    % Control if F_L is located at coupling centroid
-TG.F_P_is_equal = 2;               % Control if all F_P magnitudes are equal. 1 for all equal, 0 for specific vectors, 2 for solve via superpositon of load in first column
-TG.mat_lib_external = 0;           % Control if external imported material library is used, else use default
+solve_in_input_csys = 1;        % Control if plots and results are in input coordinate system
+solve_in_custom_csys = 0;       % Control if plots and results are in custom coordinate system
+solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
 
-TG.solve_in_input_csys = 0;        % Control if plots and results are in input coordinate system
-TG.solve_in_custom_csys = 0;       % Control if plots and results are in custom coordinate system
-TG.solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
+subtract_preload_deflection = 1;% Control if preload deflection is subtracted from clamp force induced error to simulate only loading and unloading clamp.
 
-TG.subtract_preload_deflection = 1;% Control if preload deflection is subtracted from clamp force induced error to simulate only loading and unloading clamp.
-
-TG.visualize_in_blender = 0;       % Control if visualization in blender is turned on
-TG.visualize_resultant_forces = 0; % Control if resultant forces are calculated and displayed in blender viewport
-
-TG.threeD_coupling = 1;            % Control if 3D coupling is enabled. Save calculation speed by only enabling when vee_reorient vectors are used
-TG.time_script = 0;                % Control if script is timed
-TG.verify_inputs = 0;              % Control if inputs are verified before running the script
-TG.bypass_errors = 0;              % Control if error messages are bypassed. Use at your own risk.
-TG.solve_force_location_boundary = 0;  % Control if force location bounds are solved that induce clamp separation.
-TG.bypass_geometric_variance = 1;  % Control if nominal geometry resting position is solved analytically rather than numerically. 
+threeD_coupling = 1;            % Control if 3D coupling is enabled. Save calculation speed by only enabling when vee_reorient vectors are used
+time_script = 0;                % Control if script is timed
+verify_inputs = 0;              % Control if inputs are verified before running the script
+bypass_errors = 0;              % Control if error messages are bypassed. Use at your own risk.
+solve_force_location_boundary = 0;  % Control if force location bounds are solved that induce clamp separation.
+bypass_geometric_variance = 1;  % Control if nominal geometry resting position is solved analytically rather than numerically. 
 
 % Unsupported 2/28/24
-TG.exaggerated_plot = 0;           % Control if output exaggerated error plot of geometry is generated
-TG.use_friction = 0;               % Control if friction is considered in force balance
-TG.solve_stiffness = 0;            % Control if stiffness is solved for each DOF
-TG.canoe_ball = 0;                 % Control if canoe ball is used
-TG.use_mass = 0;                   % Use ball and vee plate mass and COM in force balance
+exaggerated_plot = 0;           % Control if output exaggerated error plot of geometry is generated
+use_friction = 0;               % Control if friction is considered in force balance
+solve_stiffness = 0;            % Control if stiffness is solved for each DOF
+canoe_ball = 0;                 % Control if canoe ball is used
+use_mass = 0;                   % Use ball and vee plate mass and COM in force balance
 
 %% - Scales and Factors
 KC_type = 3; % Control type of KC, 0 for angular symmetry, 1 for isosceles, 2 for right, 3 for custom
@@ -47,7 +42,7 @@ KC_radius = [138,200];
 % - Optional Rotation of KC from Input Csys. 
 % Generally used for transforming a simple system such as symmetric 90
 % degrees.
-inRx = 0; inRy = pi/3; inRz = pi; % Rotation Angles
+inRx = pi/2; inRy = 0; inRz = 0; % Rotation Angles
 inP = [0,0,0]'; % Transformation Vector
 %% - Geometry
 % [mm] Nominal Coordinates of each ball center (triangle) in the 
@@ -77,7 +72,7 @@ M_PL = [0,0,0]'; % M_PL is list of clamp preload moments applied to the ball pal
 % F_L = [44.5 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 F_L = [138 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 M_L = [0,0,0]'; % M_L is list of clamp moments applied to the ball pallet
-F_L_loc = [0,0,225.5-71.42]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
+F_L_loc = [0,60,225.5-71.42]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
 
 F_L_loc_Rot = Tform(pi/6, 3); % If F_L_loc is to be rotated, use this transform matrix.
 % - Optional masses for heavy clamps.
@@ -110,6 +105,39 @@ N = 10; % Samples
 %% Custom Csys Solution relative to input csys
 T_custom = eye(4);
 %% NO EDITS PAST THIS LINE ...............................................
+%% SET TOGGLES
+TG = KC_TOG;
+
+TG.solve_nominal = solve_nominal;
+TG.solve_specific = solve_specific;
+TG.solve_montecarlo = solve_montecarlo;
+TG.solve_covariance = solve_covariance;
+
+TG.rotinputs = rotinputs; 
+TG.FL_is_Coupling_Centroid = FL_is_Coupling_Centroid;  
+TG.F_P_is_equal = F_P_is_equal;
+TG.mat_lib_external = mat_lib_external;          
+
+TG.solve_in_input_csys = solve_in_input_csys;  
+TG.solve_in_custom_csys = solve_in_custom_csys;      
+TG.solve_in_C_csys = solve_in_C_csys; 
+
+TG.subtract_preload_deflection = subtract_preload_deflection;
+
+TG.threeD_coupling = threeD_coupling;       
+TG.time_script = time_script; 
+TG.verify_inputs = verify_inputs;
+TG.bypass_errors = bypass_errors; 
+TG.solve_force_location_boundary = solve_force_location_boundary;  
+TG.bypass_geometric_variance = bypass_geometric_variance;  
+
+% Unsupported 2/28/24
+TG.exaggerated_plot = exaggerated_plot;
+TG.use_friction = use_friction;  
+TG.solve_stiffness = solve_stiffness; 
+TG.canoe_ball = canoe_ball;
+TG.use_mass = use_mass;
+
 %% INIT CALCULATIONS
 % DO NOT EDIT THIS SECTION. CALCULATIONS ONLY. ALL INPUTS ABOVE
 if KC_type ~= 3
@@ -124,19 +152,18 @@ if (TG.rotinputs)
     inputTranRot = inputTran * inputRotate; % Transformation
     N_tri = data_transform(inputTranRot,N_tri')';
     F_L_loc = data_transform(inputTranRot, F_L_loc')';
-    % F_L = data_transform(inputRotate,F_L')';
+    F_L = data_transform(inputRotate,F_L')';
     F_PL_loc = data_transform(inputTranRot, F_PL_loc')';
-    % F_PL = data_transform(inputRotate,F_PL')';
+    F_PL = data_transform(inputRotate,F_PL')';
 
     FL_loc_tol = data_transform(inputTranRot,FL_loc_tol);
     F_L_tol = data_transform(inputRotate,F_L_tol);
     B_pos_tol = data_transform(inputTranRot,B_pos_tol);
     V_pos_tol = data_transform(inputTranRot,V_pos_tol);
-
-    C = incenter_solve(N_tri); % Solve Incenter if New
-else
-    C = incenter_solve(N_tri); % Solve Incenter
 end
+
+% Solve Incenter
+C = incenter_solve(N_tri); 
 
 if(~TG.threeD_coupling)
     vee_reorient = zeros(3);
@@ -179,6 +206,9 @@ KC.Mvee = mat_vee;
 KC.sig_y_SF = 1.0;
 KC.sig_tau_SF = 1.0;
 KC.T_Vees = cell(6,1);
+for i = 1:6
+    KC.T_Vees{i} = eye(4);
+end
 
 % --------------------------------------------
 TL = KC_TOL;
@@ -205,4 +235,37 @@ end
 if (TG.solve_nominal+TG.solve_specific+TG.solve_montecarlo+TG.solve_covariance > 1)
     uiwait(errordlg('Only one type of solution may be checked. Verify Solve toggles are all zero except one'));
     error('Script Terminated')
+end
+%% STORE CONFIG FILE
+% Work in progress
+% saveObjectsToFile(TG, KC, PreLD, LD, TL, POI, N, T_custom, 'default_config.mat')
+%% INTERNAL FUNCTIONS
+function saveObjectsToFile(TG, KC, PreLD, LD, TL, POI, N, T_custom, filename)
+    % Gather objects into a structure
+    data.TG = TG;
+    data.KC = KC;
+    data.PreLD = PreLD;
+    data.LD = LD;
+    data.TL = TL;
+    data.POI = POI;
+    data.N = N;
+    data.T_custom = T_custom;
+    
+    % Save the structure to a .mat file
+    save(filename, '-struct', 'data');
+    fprintf('Objects saved to %s.\n', filename);
+end
+function [tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom] = unpackObjectsFromFile(filename)
+    % Load the structure from the .mat file
+    data = load(filename);
+    % Unpack the structure into variables
+    TG = data.TG;
+    KC = data.KC;
+    PreLD = data.PreLD;
+    LD = data.LD;
+    TL = data.TL;
+    POI = data.POI;
+    N = data.N;
+    T_custom = data.T_custom;
+end
 end

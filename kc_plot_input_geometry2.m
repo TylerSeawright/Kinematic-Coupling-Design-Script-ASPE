@@ -90,7 +90,7 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
     % end
     % Plot Force Input Location
     plot3(FL_loc(1),FL_loc(2), FL_loc(3), "*r", 'MarkerSize', 8, 'LineWidth', 2);
-    text(FL_loc(1) + bl_offset, FL_loc(2) + bl_offset, FL_loc(3) + bl_offset, "FL", 'color', 'r')
+    text(FL_loc(1) + bl_offset, FL_loc(2) + bl_offset, FL_loc(3) + bl_offset, strcat( 'FL', strcat(num2str(round(norm(FL),1)), ' N')), 'color', 'r')
 
     % Plot Preload Inputs
     for i = 1:3
@@ -100,7 +100,7 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
         % text(PL(1,i) + bl_offset, PL(2,i) + bl_offset, PL(3,i) + bl_offset, PL_label)   
     end
     plot3(PL_loc(1,1),PL_loc(2,1), PL_loc(3,1), "*k", 'MarkerSize', 8, 'LineWidth', 2)
-    text(PL_loc(1,1) + bl_offset, PL_loc(2,1) + bl_offset, PL_loc(3,1) + bl_offset, "PL", 'color', 'k')   
+    text(PL_loc(1,1) + bl_offset, PL_loc(2,1) + bl_offset, PL_loc(3,1) + bl_offset, strcat( 'PL', strcat(num2str(round(norm(PL(1:3,1)),1)), ' N')), 'color', 'k')   
     % Plot Clamp Force Vector
     plot3(FL_scale(1,:), FL_scale(2,:), FL_scale(3,:), "-r", 'LineWidth', 2);
     % Plot Angle Bisectors
