@@ -1,10 +1,10 @@
 %% FUNCTION DEFINITION
-function [KC_og, KC_of, tg] = KC_SOLVER(tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom)
+function [KC_og, KC_of, T_ogf_GC_BC, tg] = KC_SOLVER(tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom)
 %% KC_SOLVER.m
 % Revision:     1.2
 % Author:       Tyler A. Seawright
 % Created:      10/24/23
-% Last Updated: 4/3/24
+% Last Updated: 5/4/24
 %% AUTHOR'S NOTE
 % This script was created through the work of Dr. Alexander Slocum, Michel
 % Pharand, and Tyler Seawright. With this script, 2D and 3D kinematic
@@ -79,11 +79,6 @@ else
     T_Q = eye(4);
 end
 
-%% BLENDER VISUALIZATION
-% Section removed since 3D visualization is now possible in MATLAB
-% if (tg.visualize_in_blender)
-%     write_to_blender(ball_positions, ball_diameters, plane_positions, plane_rotations, arrow_position, arrow_rotation, coord_sys_position, coord_sys_rotation, contact_force_magnitudes)
-% end
 %% SOLVE NOMINAL SYSTEM
 % Solves nominal contact points
 if (tg.solve_nominal)
@@ -92,18 +87,13 @@ if (tg.solve_nominal)
     kc_nom.Ld = KC_LOAD; % Set all loads to zero.
     kc_nom.Preld = KC_LOAD; % Set all preloads to zero.
     [kc_ng, kc_nf, T_ngf_GC_BC] = KC_COUPLING(tg, kc_nom, tl_nom, T_Q);
-    % kc_ng.Pb, kc_ng.C
-    % kc_nf.Pct, kc_nf.Pb, kc_nf.C, kc_nf.T_GC_BC 
-    % kc_plot_input_geometry2(kc_nf, tg, "KC Free Body Diagram");
-    KC_og = kc_ng; KC_of = kc_nf;
+    KC_og = kc_ng; KC_of = kc_nf; T_ogf_GC_BC = T_ngf_GC_BC;
 end
 %% SOLVE SPECIFIC CASE
 if (tg.solve_specific)
     % Solve specific case
     kc_s = kc_inT;
     [kc_sg, kc_sf, T_sgf_GC_BC] = KC_COUPLING(tg, kc_s, tl_in, T_Q);
-    % kc_sg.Pb, kc_sg.C
-    % kc_sf.Pb, kc_sf.C, kc_sf.RP, kc_sf.T_GC_BC, kc_sf.dPb
     
     % % Vertical KC Experiment Verification ..................
     % C = kc_sf.C
@@ -127,19 +117,18 @@ if (tg.solve_specific)
     % ......................................................
 
     % Plot Geometry
-    % kc_plot_input_geometry2(kc_sf, tg, "KC Free Body Diagram");
-    KC_og = kc_sg; KC_of = kc_sf;
+    KC_og = kc_sg; KC_of = kc_sf; T_ogf_GC_BC = T_sgf_GC_BC;
 end
 %% MONTECARLO SIMULATION
 if (tg.solve_montecarlo)
     % Solve Montecarlo
     kc_mc = kc_inT;
     for i = 1:N
-    [kc_mg{i}, kc_mf{i}, T_sgf_GC_BC{i}] = KC_COUPLING(tg, kc_mc, tl_in, T_Q);
+    [kc_mg{i}, kc_mf{i}, T_mgf_GC_BC{i}] = KC_COUPLING(tg, kc_mc, tl_in, T_Q);
     end
     % Statistics
 
-    KC_og = kc_mg; KC_of = kc_mf;
+    KC_og = kc_mg; KC_of = kc_mf; T_ogf_GC_BC = T_mgf_GC_BC;
 end
 %% COVARIANCE ERROR SIMULATION
 % Currently unsupported

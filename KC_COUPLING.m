@@ -116,6 +116,6 @@ end
     T_Tot = kc_g.T_GC_BC * kc_ld.T_GC_BC * T_Q;
     %% APPLY TRANSFORMATION TO INPUT CSYS
     % Apply transform to input, custom, or default Csys
-    kc_g = KC_TRANSFORM(kc_g,T_Tot);
-    kc_f = KC_TRANSFORM(kc_f,T_Tot);
+    kc_g = KC_TRANSFORM(kc_g,T_Q);
+    kc_f = KC_TRANSFORM(kc_f,T_Q);
 end
