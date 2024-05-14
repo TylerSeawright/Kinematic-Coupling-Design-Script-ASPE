@@ -1,8 +1,8 @@
 # Kinematic-Coupling-Design-Script-ASPE
 
-% Revision:     1.3
+% Revision:     1.4
 % Author:       Tyler A. Seawright
-% Created:      10/24/23
+% Created:      5/8/23
 % Last Updated: 4/10/24
 
 % AUTHOR'S NOTE

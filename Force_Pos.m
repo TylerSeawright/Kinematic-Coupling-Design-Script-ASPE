@@ -1,4 +1,4 @@
-function [kc_ld, kc_preld, error_msg] = Force_Pos(kc, ld, preld, tl, tg)
+function [kc_load, kc_preload, error_msg] = Force_Pos(kc, tl, tg)
 %% INITIALIZE INPUTS
 kc_ld = kc; 
 error_msg = zeros(1,3); % Store booleans of three error cases, separation, yield stress, shear stress
@@ -22,63 +22,71 @@ else
    kc_ld.Ld.P = kc_ld.Ld.P;
    kc_ld.Ld.P_loc = kc_ld.Ld.P_loc;   
 end
-%% CALCULATE Pc_avg and Pc_2_Pb
+%% SOLVE DIRECTION COSINES
+% Extracted from T_Vees
+dc = zeros(3,6);
+for i = 1:6
+    dc(1:3,i) = extractDirectionCosines(kc_ld.T_Vees{i});
+end
+kc_ld.dc = dc;
+% Older version solved direction cosines in ClampContactForce() in a
+% different method.
+%% ROTATE KC TO SLOCUM CSYS
+% Rotate data to match Slocum solution form
+rot_ang_slo = -vec_ang(kc_ld.Pb(1:3,1), [0,1,0]'); % Angle between ball 1 and Y axis about Z axis
+T_slo = Tform(rot_ang_slo,3); % Rotation matrix between ball 1 vector and Y axis about Z axis
+
+% Solve Transformed KC_SLO
+kc_ld_slo = KC_TRANSFORM(kc_ld, T_slo);
+kc_preld_slo = kc_ld_slo;
 % Calculate vector from ball contact to ball center and average between ball contact points
-Pc_avg = zeros(3,3); Pc_2_Pb = zeros(3,6);
+Pc_avg_slo = zeros(3,3); Pc_2_Pb_slo = zeros(3,6);
 for i = 1:2:6 
     j = (i+1)/2; 
-    Pc_2_Pb(1:3,i) = kc.Pb(1:3,j) - kc.Pc(1:3,i); % Vector from ball contact to ball center 1
-    Pc_2_Pb(1:3,i+1) = kc.Pb(1:3,j) - kc.Pc(1:3,i+1); % Vector from ball contact to ball center 2
-    Pc_avg(1:3,j) = (kc.Pc(1:3,i+1) + kc.Pc(1:3,i))/2; % Average between ball contact points
+    Pc_2_Pb_slo(1:3,i) = kc_ld_slo.Pb(1:3,j) - kc_ld_slo.Pc(1:3,i); % Vector from ball contact to ball center 1
+    Pc_2_Pb_slo(1:3,i+1) = kc_ld_slo.Pb(1:3,j) - kc_ld_slo.Pc(1:3,i+1); % Vector from ball contact to ball center 2
+    Pc_avg_slo(1:3,j) = (kc_ld_slo.Pc(1:3,i+1) + kc_ld_slo.Pc(1:3,i))/2; % Average between ball contact points
 end
-%% ROTATE DATA INPUT TO MATCH SLOCUM CSYS
-% Rotate data to match Slocum solution form
-rot_ang_slo = -vec_ang(kc.Pb(1:3,1), [0,1,0]'); % Angle between ball 1 and Y axis about Z axis
-T_slo = Tform(rot_ang_slo,3); % Rotation matrix between ball 1 vector and Y axis about Z axis
+%% OPRGANIZE DATA AND SET UNITS
 % Data to rotate
-Pb_slo = data_transform(T_slo, kc.Pb(1:3,1:3)')'./1000;
-Pc_avg_slo = data_transform(T_slo, Pc_avg')'./1000;
-Pc_slo = data_transform(T_slo, kc.Pc(1:3,:)')'./1000;
-Pc_2_Pb_slo = data_transform(T_slo, Pc_2_Pb')'./1000;
-FL_loc_slo = data_transform(T_slo, ld.P_loc')'./1000;
-F_L_slo = data_transform(T_slo, ld.P')';
+Pb_slo = kc_ld_slo.Pb(1:3,1:3)./1000;
+Pc_avg_slo = Pc_avg_slo./1000;
+Pc_slo = kc_ld_slo.Pc(1:3,:)./1000;
+Pc_2_Pb_slo = Pc_2_Pb_slo./1000;
+FL_loc_slo = kc_ld_slo.Ld.P_loc./1000;
+F_L_slo = kc_ld_slo.Ld.P;
 
 if (tg.F_P_is_equal==0 || tg.F_P_is_equal==1)
     for j = 1:3
-        F_P_slo(1:3,j) = preld{j}.P;
+        F_P_slo(1:3,j) = kc_ld_slo.Preld{j}.P;
+        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{j}.P_loc./1000;
     end
 elseif(tg.F_P_is_equal==2)
     for j = 1:3
-        F_P(1:3,j) = preld{1}.P;
-        F_P_loc(1:3,j) = preld{1}.P_loc./1000;
+        F_P_slo(1:3,j) = kc_ld_slo.Preld{1}.P;
+        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{1}.P_loc./1000;
     end
-    F_P_slo = data_transform(T_slo, F_P')';
-    F_P_loc_slo = data_transform(T_slo, F_P_loc')';
 end
-
-C_slo = data_transform(T_slo, kc.C')'./1000;
 
 %% SOLVE FORCE AT EACH BALL CONTACT (SI UNITS)
 if(tg.F_P_is_equal==0 || tg.F_P_is_equal==1) % If 3 preloads are applied at balls
-    [dc_slo, FBc_slo, clamp_separated] = ClampContactForce(Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, F_P_slo', F_L_slo', FL_loc_slo'); % Solve with preload and applied load
-    [~, FBc_preload_slo, ~] =        ClampContactForce(Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, F_P_slo', zeros(1,3)', zeros(1,3)'); % Solve with only preload
-    % dc_slo(3,:) = -dc_slo(3,:);
+    [FBc_slo, clamp_separated] =  ClampContactForce(kc_ld_slo.dc, Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, F_P_slo', F_L_slo', FL_loc_slo'); % Solve with preload and applied load
+    [FBc_preload_slo, ~] =        ClampContactForce(kc_ld_slo.dc, Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, F_P_slo', zeros(1,3)', zeros(1,3)'); % Solve with only preload
 elseif (tg.F_P_is_equal==2) % If a single preload is applied to plate same as applied load
-    [dc_slo, FBc_slo, clamp_separated] = ClampContactForce(Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, zeros(3), F_L_slo', FL_loc_slo'); % Solve with preload and applied load
-    [~, FBc_preload_slo, ~] =        ClampContactForce(Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, zeros(3), F_P_slo(1:3,1)', F_P_loc_slo(1:3,1)'); % Solve with only preload
-    % dc_slo(3,:) = -dc_slo(3,:);
+    [FBc_slo, clamp_separated] =  ClampContactForce(kc_ld_slo.dc, Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, zeros(3), F_L_slo', FL_loc_slo'); % Solve with preload and applied load
+    [FBc_preload_slo, ~] =        ClampContactForce(kc_ld_slo.dc, Pc_slo(1:3,1:6)', Pc_2_Pb_slo', Pc_avg_slo, zeros(3), F_P_slo(1:3,1)', F_P_loc_slo(1:3,1)'); % Solve with only preload
     FBc_slo = FBc_slo + FBc_preload_slo; % Superposition combines reaction forces at the same points.
 end
-% FBc_slo,FBc_preload_slo
-% Error Handling
+
+%% ERROR HANDLING
 if(clamp_separated) % Display error if nominal clamp separates
     error_msg(1) = 1;
-    kc_ld.clamp_separation = 1;
+    kc_ld_slo.clamp_separation = 1;
     return
 end
 %% SOLVE CONTACT STRESSES AND DEFLECTIONS
-[sig_load_slo,~,~,in_ball_disp_load, sig_tau_load_slo,Del_load_slo,~] = ContactStressElliptical2(min(sig_yield), dc_slo, [1,1].*([kc.Db(1), 2* kc.Rb2(1)] /(2* 1000)), kc.DV(1:2), E, v, FBc_slo, 0);
-[sig_preload_slo,~,~,in_ball_disp_preload, sig_tau_preload_slo,Del_preload_slo,~] = ContactStressElliptical2(min(sig_yield), dc_slo, [1,1].*([kc.Db(1), 2* kc.Rb2(1)] /(2*1000)), kc.DV(1:2), E, v, FBc_preload_slo, 0);
+[sig_load_slo,~,~,~, sig_tau_load_slo,Del_load_slo,~] = ContactStressElliptical2(min(sig_yield), kc_ld_slo.dc, [1,1].*([kc.Db(1), 2* kc.Rb2(1)] /(2* 1000)), kc.DV(1:2), E, v, FBc_slo, 0);
+[~,~,~,~,~,Del_preload_slo,~] =                         ContactStressElliptical2(min(sig_yield), kc_ld_slo.dc, [1,1].*([kc.Db(1), 2* kc.Rb2(1)] /(2*1000)), kc.DV(1:2), E, v, FBc_preload_slo, 0);
 Del_load_slo = Del_load_slo' * 1000; % Convert to mm and transpose
 Del_preload_slo = Del_preload_slo' * 1000; % Convert units to mm and transpose
 
@@ -104,61 +112,51 @@ if(any(kc.sig_tau_SF <= st_clamp_sf))
     return
 end
 %% SOLVE CLAMP ERROR POSITION AND ROTATION
-[~, T_BC_F_slo, del_C_F, del_b_F] = kc_Ferr_rot2(Del_load_slo, dc_slo, C_slo, Pb_slo); % [mm]
+[~, T_BC_F_slo, del_C_F, del_b_F] = kc_Ferr_rot2(Del_load_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
 if(tg.subtract_preload_deflection)
-    [~, T_BC_F_preload_slo, del_C_preload_slo, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, dc_slo, C_slo, Pb_slo); % [mm]
+    [~, T_BC_F_preload_slo, del_C_preload_slo, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
     del_C_load_slo = del_C_F - del_C_preload_slo; % [mm] Solve deflection from only applied load
     del_B_load_slo = del_b_F - del_b_preload_slo; % [mm]
 
     del_C_preload_slo = del_C_F; % [mm] 
     del_B_preload_slo = del_b_F; % [mm]
-   
+else
+    del_C_load_slo = del_C_F;
+    del_C_preload_slo = del_C_F;
 end
-%% ROTATE OUTPUTS TO SOLUTION CSYS
-% Load Variables
-T_GC_SLO = inv(T_slo);
-T_GC_SLO_ROT = eye(4); T_GC_SLO_ROT(1:3,1:3) = T_GC_SLO(1:3,1:3);
-Del_load = Del_load_slo; % Magnitude normal to vee plane, no rotation
-FBc = FBc_slo; % Magnitude normal to vee plane, no rotation
-del_B_load = data_transform(T_GC_SLO, del_B_load_slo')';
-dc = data_transform(T_GC_SLO_ROT, dc_slo')'; % Rotation Only
-T_GC_BC_ld = T_BC_F_slo;
-% Preload Variables
-T_GC_pre_SLO = inv(T_slo);
-T_GC_pre_SLO_ROT = eye(4); T_GC_pre_SLO_ROT(1:3,1:3) = T_GC_pre_SLO(1:3,1:3);
-Del_preload = Del_preload_slo; % Magnitude normal to vee plane, no rotation
-FBc_preload = FBc_preload_slo; % Magnitude normal to vee plane, no rotation
-del_B_preload = data_transform(T_GC_pre_SLO, del_B_preload_slo')';
-del_C_preload = data_transform(T_GC_pre_SLO, del_C_preload_slo);
-T_GC_BC_preld = T_BC_F_preload_slo;
-
-T_BC_F = T_BC_F_slo;
 %% SOLVE COMBINED ERROR HTM'S
-rest_err_load = [T_BC_F(3,2), T_BC_F(1,3), T_BC_F(2,1),T_BC_F(1:3,4)']*1000; % [urad,um] Rest err is extracted from T_GC_F HTM [a, B, g, x, y, z]
-del_C_load = T_BC_F(1:3,4);
-%% KC SYSTEMS
+rest_err_load_slo = [T_BC_F_slo(3,2), T_BC_F_slo(1,3), T_BC_F_slo(2,1),T_BC_F_slo(1:3,4)']; % [urad,um] Rest err is extracted from T_GC_F HTM [a, B, g, x, y, z]
+rest_err_preload_slo = [T_BC_F_preload_slo(3,2), T_BC_F_preload_slo(1,3), T_BC_F_preload_slo(2,1),T_BC_F_preload_slo(1:3,4)'];
+% Rotate Coordinate System Slo to Sol
+T_Sol_slo = inv(T_slo); 
+T_BC_F_load = T_BC_F_slo * T_slo;
+T_BC_F_preload = T_BC_F_preload_slo * T_slo;
+%% DEFINE KC SYSTEMS
+kc_ld_slo.Pb = kc_ld_slo.Pct(1:3,1:3) + del_B_load_slo;
+kc_ld_slo.Pc = kc_ld_slo.Pc;
+kc_ld_slo.C = kc_ld_slo.C + rest_err_load_slo(4:6)';
+kc_ld_slo.RP = FBc_slo;
+kc_ld_slo.sigma = sig_load_slo;
+kc_ld_slo.tau = sig_tau_load_slo;
+kc_ld_slo.in_bd = Del_load_slo;
+kc_ld_slo.dPb = del_B_load_slo;
+kc_ld_slo.C_err = rest_err_load_slo;
+kc_ld_slo.T_GC_BC = T_BC_F_load;
 
-kc_ld.Pb = kc.Pb(1:3,1:3) + del_B_load;
-kc_ld.Pc = kc.Pc;
-kc_ld.C = kc.C + del_C_load;
-kc_ld.RP = FBc;
-kc_ld.sigma = sig_load_slo;
-kc_ld.tau = sig_tau_load_slo;
-kc_ld.in_bd = in_ball_disp_load;
-kc_ld.dPb = del_B_load;
-kc_ld.dc = dc;
-kc_ld.C_err = rest_err_load;
-kc_ld.T_GC_BC = T_GC_BC_ld;
-
-kc_preld.Pb = kc.Pb(1:3,1:3) + del_B_preload;
-kc_preld.Pc = kc.Pc;
-kc_preld.RP = FBc;
-kc_preld.sigma = sig_load_slo;
-kc_preld.tau = sig_tau_load_slo;
-kc_preld.in_bd = in_ball_disp_load;
-kc_preld.dPb = del_B_load;
-kc_preld.dc = dc;
-kc_preld.C = kc.C + del_C_preload;
-kc_preld.C_err = rest_err_load;
-kc_preld.T_GC_BC = T_GC_BC_preld;
+% Currently unused, however coded if needed in future.
+kc_preld_slo.Pb = kc_preld_slo.Pct(1:3,1:3) + del_B_preload_slo;
+kc_preld_slo.Pc = kc_preld_slo.Pc;
+kc_preld_slo.C = kc_preld_slo.C + rest_err_preload_slo(4:6)';
+kc_preld_slo.RP = FBc_preload_slo;
+kc_preld_slo.sigma = sig_load_slo;
+kc_preld_slo.tau = sig_tau_load_slo;
+kc_preld_slo.in_bd = Del_preload_slo;
+kc_preld_slo.dPb = del_B_preload_slo;
+kc_preld_slo.C_err = rest_err_preload_slo;
+kc_preld_slo.T_GC_BC = T_BC_F_preload;
+%% ROTATE KC SYSTEMS
+kc_load = KC_TRANSFORM(kc_ld_slo, T_Sol_slo);
+kc_preload = KC_TRANSFORM(kc_preld_slo, T_Sol_slo);
+%% DEBUG PLOT
+% kc_plot_FBD(kc_load, tg, "KC Free Body Diagram, Sol Csys");
 end

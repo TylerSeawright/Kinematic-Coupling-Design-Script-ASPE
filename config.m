@@ -1,5 +1,5 @@
 % Configuration File
-function [TG, KC, PreLD, LD, TL, POI, N, T_custom] = config()
+function [TG, KC, TL, POI, N, T_custom] = config()
 %% GUI INPUTS
 solve_nominal = 0;              % Control if Nominal simulation runs
 solve_specific = 1;             % Control if Specific simulation runs
@@ -13,7 +13,7 @@ mat_lib_external = 0;           % Control if external imported material library 
 
 solve_in_input_csys = 1;        % Control if plots and results are in input coordinate system
 solve_in_custom_csys = 0;       % Control if plots and results are in custom coordinate system
-solve_in_C_csys = 1;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
+solve_in_C_csys = 0;            % Control if plots and results are in centroid coordinate system. B3 center on x-axis and all balls on XY plane.
 
 subtract_preload_deflection = 1;% Control if preload deflection is subtracted from clamp force induced error to simulate only loading and unloading clamp.
 
@@ -62,19 +62,17 @@ Vee_rad = 1e10*[1,1]';            % [mm], Large radius for vee groove -> flat, R
 Vh = 0*ones(1,3);                 % [mm] vee hieght
 vee_reorient = [pi/2 0 0; -pi/2 0 0; 0 0 0]; % [rad], controls vee orientation, [0,0,0] is vee pointing towards centroid. CHECK INPUT CSYS
 %% Forces
-F_PL = [51.5 0 0; ... % F_PL are preload force vectors
+F_PL = [50 0 0; ... % F_PL are preload force vectors
         0 0 0;
         0 0 0]';
-F_PL_loc = [0 0 71.42; ... % F_PL_loc are preload force position vectors relative to each ball center [x1, y1, z1; x2 ...]
+F_PL_loc = [0 0 25; ... % F_PL_loc are preload force position vectors relative to each ball center [x1, y1, z1; x2 ...]
             0 0 0;
             0 0 0]';
 M_PL = [0,0,0]'; % M_PL is list of clamp preload moments applied to the ball pallet
-% F_L = [44.5 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 F_L = [138 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 M_L = [0,0,0]'; % M_L is list of clamp moments applied to the ball pallet
-F_L_loc = [0,60,225.5-71.42]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
+F_L_loc = [0,0,50]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
 
-F_L_loc_Rot = Tform(pi/6, 3); % If F_L_loc is to be rotated, use this transform matrix.
 % - Optional masses for heavy clamps.
 mass_ball_plate = 0;
 COM_ball_plate = [0,0,0]';
@@ -163,7 +161,7 @@ if (TG.rotinputs)
 end
 
 % Solve Incenter
-C = incenter_solve(N_tri); 
+C = incenter_solve(N_tri);
 
 if(~TG.threeD_coupling)
     vee_reorient = zeros(3);

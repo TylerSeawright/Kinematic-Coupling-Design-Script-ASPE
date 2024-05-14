@@ -7,10 +7,15 @@ clc, clear, close all
 
 % Print Outputs
     % - Text Printouts
-% fprintf("KC_of.T_GC_BC = \n"), disp(KC_of.T_GC_BC)
-% fprintf("KC_og.T_GC_BC = \n"), disp(KC_og.T_GC_BC)
-% fprintf("T_tot = \n"), disp(T_tot)
+fprintf("KC_of.dPb (um) = \n"), disp(KC_of.dPb*1e3)
+fprintf("KC_of.Cerr (um) = \n"), disp(KC_of.C_err)
+fprintf("KC_of.C (mm) = \n"), disp(KC_of.C)
+fprintf("KC_of.Pb mm = \n"), disp(KC_of.Pb)
+fprintf("KC_of.Pct mm = \n"), disp(KC_of.Pct)
+fprintf("KC_of.dc = \n"), disp(KC_of.dc)
 
     % - Plots
 kc_plot_FBD(KC_of, tg, "KC Free Body Diagram");
-kc_plot_disp(KC_of, tg, "KC Error Displacements");
+% kc_plot_disp(KC_of, tg, "KC Error Displacements");
+    % - Move off screen plots onto the screen.
+findfigs

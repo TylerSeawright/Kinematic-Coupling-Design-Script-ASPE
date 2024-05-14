@@ -1,4 +1,4 @@
-function f = kc_plot_input_geometry2(kc, tg, plot_title)
+function f = kc_plot_FBD(kc, tg, plot_title)
     
     %% Format Data
     
@@ -75,7 +75,7 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
     plot3(Pb(1,1:3), Pb(2,1:3), Pb(3,1:3),'ro'); % Plot Coupling Triangle
     for i = 1:3
         ball_label = sprintf('B%d', i);
-        bl_offset = Db(i)/2;
+        bl_offset = 2*Db(i)/3;
         text(Pb(1,i)-bl_offset, Pb(2,i)+bl_offset, Pb(3,i)+bl_offset, ball_label,'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom')
     end
     % Plot Coupling Triangle
@@ -84,13 +84,10 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
     plot3(C(1),C(2), C(3),'og', 'MarkerSize', 10);
     plot3(BC_Csys(1,:),BC_Csys(2,:),BC_Csys(3,:),'-g', 'LineWidth', 3)
     text(C(1) - bl_offset, C(2) - bl_offset, C(3), "C", 'color', 'k')
-    % Plot Preload Forces
-    % for i = 1:3
-    % plot3(PL_scale{i}(1,:),PL_scale{i}(2,:),PL_scale{i}(3,:), '-k', 'LineWidth', 2)
-    % end
+
     % Plot Force Input Location
     plot3(FL_loc(1),FL_loc(2), FL_loc(3), "*r", 'MarkerSize', 8, 'LineWidth', 2);
-    text(FL_loc(1) + bl_offset, FL_loc(2) + bl_offset, FL_loc(3) + bl_offset, strcat( 'FL', strcat(num2str(round(norm(FL),1)), ' N')), 'color', 'r')
+    text(FL_loc(1) + bl_offset, FL_loc(2) + bl_offset, FL_loc(3) + bl_offset, sprintf('FL: %.1f N',norm(FL)), 'color', 'r')
 
     % Plot Preload Inputs
     for i = 1:3
@@ -100,7 +97,7 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
         % text(PL(1,i) + bl_offset, PL(2,i) + bl_offset, PL(3,i) + bl_offset, PL_label)   
     end
     plot3(PL_loc(1,1),PL_loc(2,1), PL_loc(3,1), "*k", 'MarkerSize', 8, 'LineWidth', 2)
-    text(PL_loc(1,1) + bl_offset, PL_loc(2,1) + bl_offset, PL_loc(3,1) + bl_offset, strcat( 'PL', strcat(num2str(round(norm(PL(1:3,1)),1)), ' N')), 'color', 'k')   
+    text(PL_loc(1,1) + bl_offset, PL_loc(2,1) + bl_offset, PL_loc(3,1) + bl_offset, sprintf('PL: %.1f N',norm(PL)), 'color', 'k')   
     % Plot Clamp Force Vector
     plot3(FL_scale(1,:), FL_scale(2,:), FL_scale(3,:), "-r", 'LineWidth', 2);
     % Plot Angle Bisectors
@@ -113,7 +110,7 @@ function f = kc_plot_input_geometry2(kc, tg, plot_title)
             j = (i+1)/2;
             plot3(FR(1,i:i+1), FR(2,i:i+1), FR(3,i:i+1), "-m", 'LineWidth', 2) % Plot Line
             plot3(FR(1,i), FR(2,i), FR(3,i), "*m", 'LineWidth', 1) % Plot Line
-            text(FR(1,i+1), FR(2,i+1), FR(3,i+1), strcat(num2str(round(kc.RP(j),1)), ' N'),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color', 'm')
+            text(FR(1,i+1), FR(2,i+1), FR(3,i+1), strcat( sprintf("R%d: ",j), strcat(num2str(round(kc.RP(j),1)), ' N')),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color', 'm')
         end
     end
 

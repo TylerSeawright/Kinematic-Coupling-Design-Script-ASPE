@@ -1,9 +1,7 @@
 % KC_COUPLING.m
 
 function [kc_g, kc_f, T_Tot] = KC_COUPLING(tg, kc, tl, T_Q)
-    
-    %% INIT INPUT VARIABLES
-    
+
     %% KC VARIATION SETUP
 Halfa_nom = (kc.Vg / 2) * pi/180; % Half angles of vee groove defined by V_groove_ang
 
@@ -82,7 +80,7 @@ end
         [kc_g.T_Vees, T_reo] = vee_plane_transform(kc_g.Pb, kc_g.Db, Halfa_nom*180/pi, kc_g.Orient, kc_g.Vreo);
         for i = 1:6
             kc_g.Pc(1:3,i) = kc_g.T_Vees{i}(1:3,4);
-            kc_g.dc(1:3,i) = [kc_g.T_Vees{i}(3,2),kc_g.T_Vees{i}(1,3),kc_g.T_Vees{i}(2,1)]';
+            kc_g.dc(1:3,i) = extractDirectionCosines(kc_g.T_Vees{i});
         end
         for j = 1:3
             T_reo_rot = T_reo{j};
@@ -94,11 +92,11 @@ end
     else
         % Solve system of equations numerically to return contact points.
         % Uses geometric variance. Limited to planar couplings only!
+        % Barraja Solution
         kc_g = Rest_Pos(kc, tl, tg);
     end
     %% FORCE INDUCED ERRORS (Using Geometric error as input)
-    [kc_ld, ~, error_msg] = Force_Pos(kc_g, kc_g.Ld, kc_g.Preld, tl, tg);
-    kc_f = kc_ld; % Store both load and preload cases of kc.
+    [kc_f, ~, error_msg] = Force_Pos(kc_g, tl, tg);
     %% ERROR MSG
     err_dialogue{1} = 'Coupling Separation, reduce the distance of the applied force relative to the center. Script Terminated';
     err_dialogue{2} = 'Coupling Contacts Failed in Compression due to High Stress. Lower applied load or preload forces, or select a stronger material. Script Terminated';
@@ -113,7 +111,7 @@ end
     else
     end
     %% COMBINE ERRORS
-    T_Tot = kc_g.T_GC_BC * kc_ld.T_GC_BC * T_Q;
+    T_Tot = kc_g.T_GC_BC * kc_f.T_GC_BC * T_Q;
     %% APPLY TRANSFORMATION TO INPUT CSYS
     % Apply transform to input, custom, or default Csys
     kc_g = KC_TRANSFORM(kc_g,T_Q);
