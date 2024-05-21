@@ -4,7 +4,7 @@ function f = kc_plot_disp(kc, tg, plot_title)
     
     Pb = kc.Pb;
     Db = kc.Db;
-    C = kc.C/1000; 
+    C = kc.C + kc.C_err(4:6)'; 
     T_v = kc.T_Vees;
     in_bd = kc.in_bd;
 
@@ -33,8 +33,8 @@ function f = kc_plot_disp(kc, tg, plot_title)
     for i = 1:2:6
         j = (i+1)/2; bl_offset = Db(j)/4;
         plotSphereAndPlane(Db(j), Pb(1:3,j), T_v{i}, T_v{i+1})
-        text(T_v{i}(1,4), T_v{i}(2,4), T_v{i}(3,4)-bl_offset, sprintf("%.1f um", 1000000*in_bd(i)),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color','r')
-        text(T_v{i+1}(1,4), T_v{i+1}(2,4), T_v{i+1}(3,4)-bl_offset, sprintf("%.1f um", 1000000*in_bd(i+1)),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color','r')
+        text(T_v{i}(1,4), T_v{i}(2,4), T_v{i}(3,4)-bl_offset, sprintf("%.1f um", 1e3*in_bd(i)),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color','r')
+        text(T_v{i+1}(1,4), T_v{i+1}(2,4), T_v{i+1}(3,4)-bl_offset, sprintf("%.1f um", 1e3*in_bd(i+1)),'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'color','r')
     end
     % Plot Ball Centers
     plot3(Pb(1,1:3), Pb(2,1:3), Pb(3,1:3),'ro'); % Plot Coupling Triangle
@@ -48,7 +48,7 @@ function f = kc_plot_disp(kc, tg, plot_title)
     % Plot Coupling Centroid
     plot3(C(1),C(2), C(3),'og', 'MarkerSize', 10);
     plot3(BC_Csys(1,:),BC_Csys(2,:),BC_Csys(3,:),'-g', 'LineWidth', 3)
-    text(C(1) - bl_offset, C(2) - bl_offset, C(3), sprintf("C Error (%.1f, %.1f, %.1f) um",1000*C(1),1000*C(2),1000*C(3)), 'color', 'k')
+    text(C(1) - bl_offset, C(2) - bl_offset, C(3), sprintf("C Error (%.1f, %.1f, %.1f) um",1e3*C(1),1e3*C(2),1e3*C(3)), 'color', 'k')
 
     % Plot Angle Bisectors
     for i = 1:3

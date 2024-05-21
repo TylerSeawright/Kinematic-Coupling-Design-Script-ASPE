@@ -15,10 +15,6 @@ function[FB,clamp_separated]=ClampContactForce(DC,BallContactLoc,BallCenter,B,F_
 % distance between the two contact points [m] 3x3 matrix
 %
 
-% TEST
-% FL_loc(2) = -FL_loc(2);
-% F_L(2) = -F_L(2);
-
 Bx=B(1,:);
 By=B(2,:);
 Bz=B(3,:);
@@ -34,17 +30,10 @@ z_B=BallContactLoc(:,3)';
 % calculating the vector between the center of the ball and the contact
 % point
 %
-X_B=-BallCenter(:,1)';
-Y_B=-BallCenter(:,2)';
-Z_B=-BallCenter(:,3)';
+% X_B=-BallCenter(:,1)';
+% Y_B=-BallCenter(:,2)';
+% Z_B=-BallCenter(:,3)';
 %
-% directionnal cosines for the 6 contact points
-% Replaced by DC input.
-% for i=1:6
-%     alpha(i)=X_B(i)/(X_B(i)^2 + Y_B(i)^2 + Z_B(i)^2)^(1/2);
-%     beta(i)=Y_B(i)/(X_B(i)^2 + Y_B(i)^2 + Z_B(i)^2)^(1/2);
-%     gamma(i)=Z_B(i)/(X_B(i)^2 + Y_B(i)^2 + Z_B(i)^2)^(1/2);
-% end
 
 alpha = DC(1,:);
 beta = DC(2,:);
@@ -54,7 +43,7 @@ gamma = DC(3,:);
 %
 A=[alpha;beta;gamma;(-beta.*z_B+gamma.*y_B);(alpha.*z_B-gamma.*x_B);(-alpha.*y_B+beta.*x_B)];
 % 3D Solution from Dr. Slocum Equations, Precision Machine Design (1992)
-% F_L, F_P, FL_loc, Bx, By, Bz
+
 Forces=[F_L(1)+F_P(1,1)+F_P(2,1)+F_P(3,1); % (1)
         F_L(2)+F_P(1,2)+F_P(2,2)+F_P(3,2); % (2)
         F_L(3)+F_P(1,3)+F_P(2,3)+F_P(3,3); % (3)
@@ -79,4 +68,9 @@ negF_idx = FB(FB<0); % Store indices where FB < 0
       end
     
 %
+
+% % Verify Sum of Forces
+% Fcomp = FB'.*DC
+% sumF = sum(Fcomp,2)
+
 end

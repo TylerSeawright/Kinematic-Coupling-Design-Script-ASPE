@@ -4,8 +4,8 @@ function [kc_g, kc_f, T_Tot] = KC_COUPLING(tg, kc, tl, T_Q)
 
     %% KC VARIATION SETUP
 Halfa_nom = (kc.Vg / 2) * pi/180; % Half angles of vee groove defined by V_groove_ang
-
-% For the ball pallet
+    
+    % For the ball pallet
 if (tg.solve_specific)
     for i = 1:3
         % Ball
@@ -116,4 +116,13 @@ end
     % Apply transform to input, custom, or default Csys
     kc_g = KC_TRANSFORM(kc_g,T_Q);
     kc_f = KC_TRANSFORM(kc_f,T_Q);
+    %% DEBUG
+    % for i = 1:6
+    %     disp(kc_f.T_Vees{i})
+    % end
+    % DCC = kc_f.dc
+    Fcomp = kc_f.RP'.*kc_f.dc
+    RP = kc_f.RP'
+    kc_plot_FBD(kc_f, tg, "KC Free Body Diagram, INPUT Csys");
+
 end

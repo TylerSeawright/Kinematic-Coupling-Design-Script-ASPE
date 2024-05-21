@@ -6,7 +6,7 @@ function kco = KC_TRANSFORM(kci, T)
     kco = kci;
     % Split T into rotation and translation components.
     Tr = [T(1:3,1:3), [0,0,0]';[0,0,0,1]];
-    Tp = [eye(3), T(1:3,4);[0,0,0,1]];
+    % Tp = [eye(3), T(1:3,4);[0,0,0,1]];
     % Split is necessary since vectors are only rotated and positions are
     % transformed by position and rotation
 

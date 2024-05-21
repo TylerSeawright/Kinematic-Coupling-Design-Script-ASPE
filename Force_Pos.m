@@ -22,15 +22,6 @@ else
    kc_ld.Ld.P = kc_ld.Ld.P;
    kc_ld.Ld.P_loc = kc_ld.Ld.P_loc;   
 end
-%% SOLVE DIRECTION COSINES
-% Extracted from T_Vees
-dc = zeros(3,6);
-for i = 1:6
-    dc(1:3,i) = extractDirectionCosines(kc_ld.T_Vees{i});
-end
-kc_ld.dc = dc;
-% Older version solved direction cosines in ClampContactForce() in a
-% different method.
 %% ROTATE KC TO SLOCUM CSYS
 % Rotate data to match Slocum solution form
 rot_ang_slo = -vec_ang(kc_ld.Pb(1:3,1), [0,1,0]'); % Angle between ball 1 and Y axis about Z axis
@@ -158,5 +149,12 @@ kc_preld_slo.T_GC_BC = T_BC_F_preload;
 kc_load = KC_TRANSFORM(kc_ld_slo, T_Sol_slo);
 kc_preload = KC_TRANSFORM(kc_preld_slo, T_Sol_slo);
 %% DEBUG PLOT
-% kc_plot_FBD(kc_load, tg, "KC Free Body Diagram, Sol Csys");
+% kc_plot_FBD(kc_ld_slo, tg, "KC Free Body Diagram, SLO Csys");
+% kc_plot_FBD(kc_load, tg, "KC Free Body Diagram, SOL Csys");
+% kc_plot_FBD(kc, tg, "KC Free Body Diagram, INPUT Csys");
+
+% Verify Sum of Forces
+% F = kc_load.RP
+% Fcomp = kc_load.RP'.*kc_load.dc
+% sumF = sum(Fcomp,2)-(kc_load.Ld.P + kc_load.Preld{1}.P)
 end
