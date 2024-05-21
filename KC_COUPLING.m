@@ -121,8 +121,15 @@ end
     %     disp(kc_f.T_Vees{i})
     % end
     % DCC = kc_f.dc
-    Fcomp = kc_f.RP'.*kc_f.dc
-    RP = kc_f.RP'
-    kc_plot_FBD(kc_f, tg, "KC Free Body Diagram, INPUT Csys");
+    % Fcomp = kc_f.RP'.*kc_f.dc
+    % for i = 1:2:6
+    %     j = (i+1)/2;
+    %     Fball(:,j) = Fcomp(:,i) + Fcomp(:,i+1);
+    %     RPball(j) = norm(Fball(:,j));
+    % end
+    % Fball
+    % RPball
+    % RP = kc_f.RP'
+    % kc_plot_FBD(kc_f, tg, "KC Free Body Diagram, INPUT Csys");
 
 end

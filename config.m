@@ -69,9 +69,9 @@ F_PL_loc = [0 0 25; ... % F_PL_loc are preload force position vectors relative t
             0 0 0;
             0 0 0]';
 M_PL = [0,0,0]'; % M_PL is list of clamp preload moments applied to the ball pallet
-F_L = [50 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
+F_L = [30 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 M_L = [0,0,0]'; % M_L is list of clamp moments applied to the ball pallet
-F_L_loc = [10,0,50]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
+F_L_loc = [65,50,50]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
 
 % - Optional masses for heavy clamps.
 mass_ball_plate = 0;

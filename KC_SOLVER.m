@@ -95,27 +95,6 @@ if (tg.solve_specific)
     % Solve specific case
     kc_s = kc_inT;
     [kc_sg, kc_sf, T_sgf_GC_BC] = KC_COUPLING(tg, kc_s, tl_inT, T_Q);
-    
-    % % Vertical KC Experiment Verification ..................
-    % C = kc_sf.C
-    % RP = kc_sf.RP' % Reaction Forces
-    % dPb = 1000* kc_sf.dPb %[um]
-    % T_exp = Tform(-pi/2,1)*Tform(-pi/2,3); % Experiment Csys
-    % T1_exp = T_exp * Tform(pi/2,3); % Sensor 1 Csys
-    % T2_exp = T_exp * Tform(-pi/2,3); % Sensor 2 Csys
-    % dPbe(:,1) = data_transform(T1_exp, dPb(:,1)')'; % dPb 1
-    % dPbe(:,2) = data_transform(T2_exp, dPb(:,2)')'; % dPb 2
-    % dPbe(:,3) = data_transform(T_exp, dPb(:,3)')'; % dPb 3
-    % % Theoretical Sensor Values
-    % Se(1) = dPbe(2,1); Se(2) = dPbe(3,1);
-    % Se(3) = dPbe(3,2); Se(4) = dPbe(2,2);
-    % Se(5) = dPbe(2,3); sens_val_vert_kc = Se
-    % % Contact Force components
-    % for i = 1:6
-    %     force_comp(1:3,i) = kc_sf.dc(1:3,i) * -kc_sf.RP(i);
-    % end
-    % contact_force_vert_kc = force_comp
-    % ......................................................
 
     % Plot Geometry
     KC_og = kc_sg; KC_of = kc_sf; T_ogf_GC_BC = T_sgf_GC_BC;
