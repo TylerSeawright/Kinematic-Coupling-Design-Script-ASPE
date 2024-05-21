@@ -1,10 +1,15 @@
-% main.m
+%% main.m
+% Author: Tyler Seawright
+% Last Edited: 5/21/24
+% Build KC Applications using KC_SOLVER(), and plot tools.
+%% CLEANUP
 clc, clear, close all
 
+%% KC APPLICATION SCRIPT
 % Sample Script
 [KC_og, KC_of, T_tot, tg] = KC_SOLVER(config());
 
-
+%% OUTPUTS
 % Print Outputs
     % - Text Printouts
 % fprintf("KC_of.dPb (um) = \n"), disp(KC_of.dPb*1e3)
@@ -19,5 +24,6 @@ clc, clear, close all
 % kc_plot_disp(KC_of, tg, "KC Error Displacements");
 % plot_err_exaggerated(KC_og, KC_og.T_GC_BC, T_tot, 10, "Coupling Centroid
 % Error, Exaggerated") % WIP
-    % - Move off screen plots onto the screen.
-findfigs
+
+% Organize Figures on Screen 
+findfigs % Move off screen plots onto the screen.
