@@ -1,5 +1,5 @@
 % Configuration File
-function [TG, KC, TL, POI, N, T_custom] = config()
+function [TG, KC, TL, N, T_custom] = config()
 %% GUI INPUTS
 solve_nominal = 0;              % Control if Nominal simulation runs
 solve_specific = 1;             % Control if Specific simulation runs
@@ -54,7 +54,7 @@ KC_custom_Pct = [104, 55, 0; ...
                  0, -138, 0]'; 
 % - Ball Bodies
 Ball_dia_nom = 19*ones(1,3);      %[mm] Nominal Ball Diameters
-Ball_R2 = 100 * ones(1,3);               % [mm] Ball major radii if using canoe balls
+Ball_R2 = 100 * ones(1,3);        % [mm] Ball major radii if using canoe balls
 
 % - Groove Bodies
 V_groove_ang = 90*ones(1,3);      % [deg] Nominal Vee Groove Angles
@@ -62,16 +62,16 @@ Vee_rad = 1e10*[1,1]';            % [mm], Large radius for vee groove -> flat, R
 Vh = 0*ones(1,3);                 % [mm] vee hieght
 vee_reorient = [pi/2 0 0; -pi/2 0 0; 0 0 0]; % [rad], controls vee orientation, [0,0,0] is vee pointing towards centroid. CHECK INPUT CSYS
 %% Forces
-F_PL = [50 0 0; ... % F_PL are preload force vectors
+F_PL = [51.5 0 0; ... % F_PL are preload force vectors
         0 0 0;
         0 0 0]';
 F_PL_loc = [0 0 25; ... % F_PL_loc are preload force position vectors relative to each ball center [x1, y1, z1; x2 ...]
             0 0 0;
             0 0 0]';
 M_PL = [0,0,0]'; % M_PL is list of clamp preload moments applied to the ball pallet
-F_L = [30 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
+F_L = [44.5 0 0]'; % F_L is list of clamp loads at FL_loc [x1, y1, z1; x2 ...]
 M_L = [0,0,0]'; % M_L is list of clamp moments applied to the ball pallet
-F_L_loc = [65,50,50]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
+F_L_loc = [0,50,0]'; % FL_loc is list of clamp load locations [x1, y1, z1; x2 ...]
 
 % - Optional masses for heavy clamps.
 mass_ball_plate = 0;
@@ -80,8 +80,7 @@ mass_vee_plate = 0;
 COM_vee_plate = [0,0,0]';
 %% POI
 poi = [10,0,0; ...
-       0, 0, 100]'; % POI [mm] is a set of points of interest to solve error about.
-poi_uncertainty = 0.00 * ones(size(poi)); % POI uncertainty [mm] set of points relative to coupling centroid by application assembly
+       0, 0, 10]; % POI [mm] is a set of points of interest to solve error about.
 %% Materials
 mu_f = 0;               % Coeff of friction between ball and vee materials, 0 for no friction
 mat_index = [5,5];      % Variable to store which rows of material lib used. First index is ball, second is vee.
@@ -204,6 +203,8 @@ KC.Mvee = mat_vee;
 KC.sig_y_SF = 1.0;
 KC.sig_tau_SF = 1.0;
 KC.T_Vees = cell(6,1);
+KC.poi = poi;
+KC.poi_err;
 for i = 1:6
     KC.T_Vees{i} = eye(4);
 end
@@ -223,11 +224,6 @@ TL.FL_loc = FL_loc_tol;   % mm
 TL.B_tol = B_pos_tol;
 TL.V_tol = V_pos_tol;
 % --------------------------------------------
-for i = 1:size(poi,1)
-    POI(i) = KC_POI;
-    POI(i).POI = poi;
-    POI(i).POI_unc = poi_uncertainty;
-end
 
 %% ERROR CHECK
 if (TG.solve_nominal+TG.solve_specific+TG.solve_montecarlo+TG.solve_covariance > 1)

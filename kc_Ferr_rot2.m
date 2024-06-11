@@ -80,5 +80,5 @@ T_err = [1 -epsZ eps_Y dC(1);
         -eps_Y eps_X 1 dC(3);
         0 0 0 1];
 %% Store Error components to single vector.
-rest_err = [eps_X, eps_Y, epsZ, dC'];
+rest_err = extract_HTM_error(T_err);
 end

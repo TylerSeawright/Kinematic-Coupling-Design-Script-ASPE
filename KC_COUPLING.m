@@ -110,8 +110,15 @@ end
         return % Return even if error dialogue not shown.
     else
     end
+
     %% COMBINE ERRORS
     T_Tot = kc_g.T_GC_BC * kc_f.T_GC_BC * T_Q;
+    %% POI Calculations
+    % POI error is the error transform to POI with nominal transform removed.
+    for i = 1:size(kc.poi,1)
+        kc_g.poi_err(i,:) = extract_HTM_error(Tform(kc.poi(i,:),0)*kc_g.T_GC_BC);
+        kc_f.poi_err(i,:) = extract_HTM_error(Tform(kc.poi(i,:),0)*kc_f.T_GC_BC);
+    end
     %% APPLY TRANSFORMATION TO INPUT CSYS
     % Apply transform to input, custom, or default Csys
     kc_g = KC_TRANSFORM(kc_g,T_Q);

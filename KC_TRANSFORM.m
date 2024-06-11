@@ -13,6 +13,9 @@ function kco = KC_TRANSFORM(kci, T)
     % Perform Transformations
     % Coupling Triangle
     kco.Pct = data_transform(T,kci.Pct')';
+
+    % POI
+    kco.poi = data_transform(T,kci.poi);
     
     % Ball Geometry
     kco.Db = kci.Db;       % Ball diameter

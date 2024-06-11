@@ -104,16 +104,17 @@ if(any(kc.sig_tau_SF <= st_clamp_sf))
 end
 %% SOLVE CLAMP ERROR POSITION AND ROTATION
 [~, T_BC_F_slo, del_C_F, del_b_F] = kc_Ferr_rot2(Del_load_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
+[~, T_BC_F_preload_slo, del_C_preload_slo, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
 if(tg.subtract_preload_deflection)
-    [~, T_BC_F_preload_slo, del_C_preload_slo, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
     del_C_load_slo = del_C_F - del_C_preload_slo; % [mm] Solve deflection from only applied load
     del_B_load_slo = del_b_F - del_b_preload_slo; % [mm]
-
     del_C_preload_slo = del_C_F; % [mm] 
     del_B_preload_slo = del_b_F; % [mm]
 else
-    del_C_load_slo = del_C_F;
+    del_C_load_slo = del_C_F; % [mm] Solve deflection from only applied load
+    del_B_load_slo = del_b_F; % [mm]
     del_C_preload_slo = del_C_F;
+    del_B_preload_slo = del_b_F; % [mm]
 end
 %% SOLVE COMBINED ERROR HTM'S
 rest_err_load_slo = [T_BC_F_slo(3,2), T_BC_F_slo(1,3), T_BC_F_slo(2,1),T_BC_F_slo(1:3,4)']; % [urad,um] Rest err is extracted from T_GC_F HTM [a, B, g, x, y, z]

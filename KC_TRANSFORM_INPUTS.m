@@ -13,6 +13,7 @@ T_A_B = orientTriangle(kc_A.Pct, kc_A.C);
 
 % Apply transformation.
 kc_B.Pct = data_transform(T_A_B, kc_A.Pct')';
+kc_B.poi = data_transform(T_A_B, kc_A.poi);
 kc_B.Ld.P_loc = data_transform(T_A_B, kc_A.Ld.P_loc')';
 kc_B.Ld.P = data_transform(Tform(T_A_B(1:3,4),0),kc_A.Ld.P')';
 for j = 1:3

@@ -4,6 +4,10 @@ classdef KC_SYS
       %% Inputs
       % Coupling Triangle
       Pct = zeros(3); % Aka input ball centers
+
+      % Points of Interest
+      % - Relative to origin of input coupling triangle.
+      poi;
       
       % Ball Geometry
       Db = zeros(1,3);      % Ball diameter
@@ -58,6 +62,7 @@ classdef KC_SYS
       tau = zeros(1,6);     % Shear stress at contact point
       clamp_separation = 0; % Indicator if any of balls broke contact with groove
       C_err = zeros(1,6);   % Error of incenter
+      poi_err;              % Error at each POI, nx6 matrix.
       T_GC_BC = eye(4);     % Transform between ball and groove coordinate systems (total error)
       T_Vees = cell(6,1);   % Trasform matrices describing groove plane position and orientation
    end

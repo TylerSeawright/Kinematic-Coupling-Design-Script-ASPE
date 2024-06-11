@@ -1,5 +1,5 @@
 %% FUNCTION DEFINITION
-function [KC_og, KC_of, T_ogf_GC_BC, tg] = KC_SOLVER(tg, kc_in, preld_in, ld_in, tl_in, poi_in, N, T_custom)
+function [KC_og, KC_of, T_ogf_GC_BC, tg] = KC_SOLVER(tg, kc_in, tl_in, N, T_custom)
 %% KC_SOLVER.m
 % Revision:     1.2
 % Author:       Tyler A. Seawright
@@ -20,7 +20,7 @@ function [KC_og, KC_of, T_ogf_GC_BC, tg] = KC_SOLVER(tg, kc_in, preld_in, ld_in,
 % tic
 %% INPUTS
 % Get all inputs from config file. Edit config file.
-[tg, kc_in, tl_in, poi_in, N, T_custom] = config();
+% [tg, kc_in, tl_in, N, T_custom] = config();
 %% BALL CENTER INPUT VERIFICATION
 % Verify ball centers forms a triangle. If a ball falls on the line formed
 % by the two other balls then end script.
