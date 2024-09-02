@@ -40,22 +40,22 @@ for i = 1:2:6
 end
 %% OPRGANIZE DATA AND SET UNITS
 % Data to rotate
-Pb_slo = kc_ld_slo.Pb(1:3,1:3)./1000;
-Pc_avg_slo = Pc_avg_slo./1000;
-Pc_slo = kc_ld_slo.Pc(1:3,:)./1000;
-Pc_2_Pb_slo = Pc_2_Pb_slo./1000;
-FL_loc_slo = kc_ld_slo.Ld.P_loc./1000;
+Pb_slo = kc_ld_slo.Pb(1:3,1:3)./1000; % [m]
+Pc_avg_slo = Pc_avg_slo./1000; % [m]
+Pc_slo = kc_ld_slo.Pc(1:3,:)./1000; % [m]
+Pc_2_Pb_slo = Pc_2_Pb_slo./1000; % [m]
+FL_loc_slo = kc_ld_slo.Ld.P_loc./1000; % [m]
 F_L_slo = kc_ld_slo.Ld.P;
 
 if (tg.F_P_is_equal==0 || tg.F_P_is_equal==1)
     for j = 1:3
         F_P_slo(1:3,j) = kc_ld_slo.Preld{j}.P;
-        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{j}.P_loc./1000;
+        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{j}.P_loc./1000;  % [m]
     end
 elseif(tg.F_P_is_equal==2)
     for j = 1:3
         F_P_slo(1:3,j) = kc_ld_slo.Preld{1}.P;
-        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{1}.P_loc./1000;
+        F_P_loc_slo(1:3,j) = kc_ld_slo.Preld{1}.P_loc./1000;  % [m]
     end
 end
 
@@ -134,6 +134,7 @@ kc_ld_slo.in_bd = Del_load_slo;
 kc_ld_slo.dPb = del_B_load_slo;
 kc_ld_slo.C_err = rest_err_load_slo;
 kc_ld_slo.T_GC_BC = T_BC_F_load;
+kc_ld_slo.stiffness = norm(F_L_slo)./(1000*rest_err_load_slo);
 
 % Currently unused, however coded if needed in future.
 kc_preld_slo.Pb = kc_preld_slo.Pct(1:3,1:3) + del_B_preload_slo;
@@ -146,15 +147,13 @@ kc_preld_slo.in_bd = Del_preload_slo;
 kc_preld_slo.dPb = del_B_preload_slo;
 kc_preld_slo.C_err = rest_err_preload_slo;
 kc_preld_slo.T_GC_BC = T_BC_F_preload;
+kc_preld_slo.stiffness = norm(F_P_slo)./(1000*rest_err_preload_slo);
+
 %% ROTATE KC SYSTEMS
 kc_load = KC_TRANSFORM(kc_ld_slo, T_Sol_slo);
 kc_preload = KC_TRANSFORM(kc_preld_slo, T_Sol_slo);
-%% DEBUG PLOT
-% kc_plot_FBD(kc_ld_slo, tg, "KC Free Body Diagram, SLO Csys");
-% kc_plot_FBD(kc_load, tg, "KC Free Body Diagram, SOL Csys");
-% kc_plot_FBD(kc, tg, "KC Free Body Diagram, INPUT Csys");
 
-% Verify Sum of Forces
+%% Verify Sum of Forces
 % F = kc_load.RP
 % Fcomp = kc_load.RP'.*kc_load.dc
 % sumF = sum(Fcomp,2)-(kc_load.Ld.P + kc_load.Preld{1}.P)

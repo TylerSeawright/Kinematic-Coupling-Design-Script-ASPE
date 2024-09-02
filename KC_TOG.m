@@ -25,9 +25,10 @@ classdef KC_TOG
     bypass_errors = 0;              % Control if error messages are bypassed. Use at your own risk.
     solve_force_location_boundary = 0;  % Control if force location bounds are solved that induce clamp separation.
     bypass_geometric_variance = 1;  % Control if nominal geometry resting position is solved analytically rather than numerically. 
+    use_structural_displacement = 0; % Control if structural deformation is applied to original ball and vee positions (Requires independent analysis with rigid balls and vees).
+    use_thermal_displacement = 0;    % Control if thermal expansion is applied to original ball and vee positions (Requires independent analysis).
 
     exaggerated_plot = 0;           % Control if output exaggerated error plot of geometry is generated
     use_friction = 0;               % Control if friction is considered in force balance
-    solve_stiffness = 0;            % Control if stiffness is solved for each DOF
    end
 end

@@ -29,6 +29,9 @@ classdef KC_SYS
       sig_y_SF = 1;         % Compressive stress safety factor
       sig_tau_SF = 1;       % Shear stress safety factor
       
+      % Custom ball center displacements
+      struct_disp_ball = zeros(3);
+      therm_disp_ball = zeros(3);
       %% INTERMEDIATE VALUES
       % These values are calculated and not to be set by users at any time.
 
@@ -61,9 +64,12 @@ classdef KC_SYS
       sigma = zeros(1,6);   % Compressive stress at contact point
       tau = zeros(1,6);     % Shear stress at contact point
       clamp_separation = 0; % Indicator if any of balls broke contact with groove
-      C_err = zeros(1,6);   % Error of incenter
+      C_err = zeros(1,6);   % Error of incenter indexes 1:3 are angles, 4:6 are cartesian coordinates.
+      Ppoi;                 % Errored POI's
       poi_err;              % Error at each POI, nx6 matrix.
       T_GC_BC = eye(4);     % Transform between ball and groove coordinate systems (total error)
       T_Vees = cell(6,1);   % Trasform matrices describing groove plane position and orientation
+      stiffness = zeros(1,6); % Stiffness for each DOF
+      T_input = zeros(4);   % Input rotation of coupling to rotate back to input coord sys.
    end
 end

@@ -10,18 +10,19 @@ kc_B = kc_A; tl_B = tl_A;
 % balls on XY plane, third ball on x axis, coupling centroid at origin.
 % orientTriangle(Ball Centers, triangle incenter)
 T_A_B = orientTriangle(kc_A.Pct, kc_A.C);
+T_A_B_r = [T_A_B(1:3,1:3),[0,0,0]'; 0,0,0,0];
 
 % Apply transformation.
 kc_B.Pct = data_transform(T_A_B, kc_A.Pct')';
 kc_B.poi = data_transform(T_A_B, kc_A.poi);
 kc_B.Ld.P_loc = data_transform(T_A_B, kc_A.Ld.P_loc')';
-kc_B.Ld.P = data_transform(Tform(T_A_B(1:3,4),0),kc_A.Ld.P')';
+kc_B.Ld.P = data_transform(T_A_B_r,kc_A.Ld.P')';
 for j = 1:3
     kc_B.Preld{j}.P_loc = data_transform(T_A_B, kc_A.Preld{j}.P_loc')';
-    kc_B.Preld{j}.P = data_transform(Tform(T_A_B(1:3,4),0),kc_A.Preld{j}.P')';
+    kc_B.Preld{j}.P = data_transform(T_A_B_r,kc_A.Preld{j}.P')';
 end
 tl_B.FL_loc = data_transform(T_A_B, tl_A.FL_loc);
-tl_B.F_L = data_transform(Tform(T_A_B(1:3,4),0),tl_A.F_L);
+tl_B.F_L = data_transform(T_A_B_r,tl_A.F_L);
 tl_B.B_tol = data_transform(T_A_B, tl_A.B_tol);
 tl_B.V_tol = data_transform(T_A_B, tl_A.V_tol);
 

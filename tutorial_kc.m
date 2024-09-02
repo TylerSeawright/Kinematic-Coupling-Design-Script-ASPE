@@ -47,6 +47,6 @@ disp(kc_f)
 % KC_TRANSFORM() transforms a KC object to a new coordinate system. 
 % Tform creates a homogeneous transform matrix for rotation and
 % transformation.
-HTM = Tform(-pi/4,1); % Transform -pi/4 about X axis.
-kc_transformed = KC_TRANSFORM(kc_f, HTM); % Transform kc_f by HTM
-kc_plot_FBD(kc_transformed, tg, "KC FBD Transformed by HTM");
+% HTM = Tform(-pi/4,1); % Transform -pi/4 about X axis.
+% kc_transformed = KC_TRANSFORM(kc_f, HTM); % Transform kc_f by HTM
+% kc_plot_FBD(kc_transformed, tg, "KC FBD Transformed by HTM");

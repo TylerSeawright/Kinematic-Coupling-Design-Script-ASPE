@@ -9,3 +9,26 @@
 function err = extract_HTM_error(H)
     err = [H(3,2), H(1,3), H(2,1), H(1:3,4)'];
 end
+
+% function err = extract_HTM_error(H)
+%     err_rot = eulerangs(H(1:3,1:3));
+%     err_pos = H(1:3,4)';
+%     err = [err_rot, err_pos];
+% 
+%     function err_rot = eulerangs(H)
+%         sy = sqrt(H(1,1)^2 + H(2,1)^2);
+% 
+%         if sy > 1e-12
+%             rx = atan2(H(3,2), H(3,3));
+%             ry = atan2(-H(3,1), sy);
+%             rz = atan2(H(2,1), H(1,1));
+%         else
+%             rx = atan2(-H(2,3), H(2,2));
+%             ry = atan2(-H(3,1), sy);
+%             rz = 0;
+%         end
+% 
+%         err_rot = [rx,ry,rz];
+%     end
+% end
+

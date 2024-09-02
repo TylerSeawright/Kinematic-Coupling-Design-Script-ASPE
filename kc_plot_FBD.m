@@ -43,7 +43,6 @@ function f = kc_plot_FBD(kc, tg, plot_title)
         PL_unit(1:3,i) = PL(1:3,i)./max(vecnorm(PL(1:3,:), 2, 1));
         PL_scale{i} = -uvec_scale * max_dist .* [[0,0,0]', PL_unit(1:3,i)] + PL_loc(1:3,i);
     end
-    
     % Contact Force Data
     if (all(kc.RP~= 0))
         RP = 1;
@@ -60,7 +59,7 @@ function f = kc_plot_FBD(kc, tg, plot_title)
     end
 
     % Csys Plot Data
-    BC_Csys = uvec_scale * max_dist * data_transform(kc.T_GC_BC,COORD()')' + C;
+    BC_Csys = uvec_scale * max_dist * data_transform(kc.T_input, COORD()')' + C;
 
     
     %% Figure Plots
@@ -87,19 +86,23 @@ function f = kc_plot_FBD(kc, tg, plot_title)
 
     % Plot Force Input Location
     plot3(FL_loc(1),FL_loc(2), FL_loc(3), "*r", 'MarkerSize', 8, 'LineWidth', 2);
+    plot3(FL_scale(1,:), FL_scale(2,:), FL_scale(3,:), "-r", 'LineWidth', 2);
     text(FL_loc(1) + bl_offset, FL_loc(2) + bl_offset, FL_loc(3) + bl_offset, sprintf('FL: %.1f N',norm(FL)), 'color', 'r')
 
     % Plot Preload Inputs
-    for i = 1:3
+    if (tg.F_P_is_equal == 0 || tg.F_P_is_equal == 1)
+        for i = 1:3
         PLx = PL_scale{i}(1,:); PLy = PL_scale{i}(2,:); PLz = PL_scale{i}(3,:);
         plot3(PLx,PLy, PLz, "-k", 'MarkerSize', 8, 'LineWidth', 2);
-        % PL_label = sprintf('P%d', i);
-        % text(PL(1,i) + bl_offset, PL(2,i) + bl_offset, PL(3,i) + bl_offset, PL_label)   
-    end
-    plot3(PL_loc(1,1),PL_loc(2,1), PL_loc(3,1), "*k", 'MarkerSize', 8, 'LineWidth', 2)
-    text(PL_loc(1,1) + bl_offset, PL_loc(2,1) + bl_offset, PL_loc(3,1) + bl_offset, sprintf('PL: %.1f N',norm(PL)), 'color', 'k')   
-    % Plot Clamp Force Vector
-    plot3(FL_scale(1,:), FL_scale(2,:), FL_scale(3,:), "-r", 'LineWidth', 2);
+        plot3(PL_loc(1,i),PL_loc(2,i), PL_loc(3,i), "*k", 'MarkerSize', 8, 'LineWidth', 2);
+        text(PL_loc(1,i) + bl_offset, PL_loc(2,i) + bl_offset, PL_loc(3,i) + 3*bl_offset, sprintf('PL: %.1f N',norm(PL(1:3,i))), 'color', 'k')   
+        end
+    elseif (tg.F_P_is_equal == 2)
+        PLx = PL_scale{1}(1,:); PLy = PL_scale{1}(2,:); PLz = PL_scale{1}(3,:);
+        plot3(PLx,PLy, PLz, "-k", 'MarkerSize', 8, 'LineWidth', 2);
+        plot3(PL_loc(1),PL_loc(2), PL_loc(3), "*k", 'MarkerSize', 8, 'LineWidth', 2);
+        text(PL_loc(1) + bl_offset, PL_loc(2) + bl_offset, PL_loc(3) + 3*bl_offset, sprintf('PL: %.1f N',norm(PL(1:3,1))), 'color', 'k')   
+    end 
     % Plot Angle Bisectors
     for i = 1:3
         plot3([C(1),Pb(1,i)]',[C(2),Pb(2,i)]',[C(3),Pb(3,i)]',"--k");
@@ -114,6 +117,11 @@ function f = kc_plot_FBD(kc, tg, plot_title)
         end
     end
 
+    % Plot Points Of Interest
+    for i = 1:size(kc.poi,1)
+        plot3(kc.poi(i,1),kc.poi(i,2),kc.poi(i,3), "*k", 'MarkerSize', 8, 'LineWidth', 2)
+        text(kc.poi(i,1) + bl_offset, kc.poi(i,2) + bl_offset, kc.poi(i,3) + bl_offset, sprintf('POI: %d ', i), 'color', 'k')
+    end
     %% Figure Format
     axis square
     axis equal

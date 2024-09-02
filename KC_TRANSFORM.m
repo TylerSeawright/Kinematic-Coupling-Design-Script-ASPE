@@ -16,6 +16,9 @@ function kco = KC_TRANSFORM(kci, T)
 
     % POI
     kco.poi = data_transform(T,kci.poi);
+    kco.Ppoi = data_transform(T,kci.Ppoi);
+    kco.poi_err(1:3) = data_transform(Tr,kci.poi_err(1:3));
+    kco.poi_err(4:6) = data_transform(T,kci.poi_err(4:6));
     
     % Ball Geometry
     kco.Db = kci.Db;       % Ball diameter
@@ -82,11 +85,13 @@ function kco = KC_TRANSFORM(kci, T)
     kco.sigma = kci.sigma;
     kco.tau = kci.tau;
     kco.clamp_separation = kci.clamp_separation;
-    kco.C_err(1:3) = data_transform(T,kci.C_err(1:3));
-    kco.C_err(4:6) = data_transform(Tr,kci.C_err(4:6));
+    kco.C_err(1:3) = data_transform(Tr,kci.C_err(1:3));
+    kco.C_err(4:6) = data_transform(T,kci.C_err(4:6));
     kco.T_GC_BC = T * kci.T_GC_BC;
     for i = 1:6
         kco.T_Vees{i} = Tr * kci.T_Vees{i};
     end
+    % kco.stiffness(1:3) = data_transform(T,kci.stiffness(1:3));
+    % kco.stiffness(4:6) = data_transform(Tr,kci.stiffness(4:6));
 
 end

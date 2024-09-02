@@ -4,7 +4,7 @@ function f = kc_plot_disp(kc, tg, plot_title)
     
     Pb = kc.Pb;
     Db = kc.Db;
-    C = kc.C + kc.C_err(4:6)'; 
+    C = kc.C_err; 
     T_v = kc.T_Vees;
     in_bd = kc.in_bd;
     poi = kc.poi;
@@ -49,13 +49,17 @@ function f = kc_plot_disp(kc, tg, plot_title)
     % Plot Coupling Centroid
     plot3(C(1),C(2), C(3),'og', 'MarkerSize', 10);
     plot3(BC_Csys(1,:),BC_Csys(2,:),BC_Csys(3,:),'-g', 'LineWidth', 3)
-    text(C(1) - bl_offset, C(2) - bl_offset, C(3), sprintf("C Error (%.1f, %.1f, %.1f) um",1e3*C(1),1e3*C(2),1e3*C(3)), 'color', 'k')
+    text(C(4) + bl_offset/2, C(5) + bl_offset, C(6)+ 3*bl_offset, sprintf("C Error:\n(%.1f, %.1f, %.1f)um\n(%.1f, %.1f, %.1f)urad",1e3*C(4),1e3*C(5),1e3*C(6),1e6*C(1),1e6*C(2),1e6*C(3)), 'color', 'k')
 
     % Plot Angle Bisectors
     for i = 1:3
         plot3([C(1),Pb(1,i)]',[C(2),Pb(2,i)]',[C(3),Pb(3,i)]',"--k");
     end
-
+    % Plot Points Of Interest
+    for i = 1:size(kc.poi,1)
+        plot3(kc.poi(i,1),kc.poi(i,2),kc.poi(i,3), "*k", 'MarkerSize', 8, 'LineWidth', 2)
+        text(kc.poi(i,1) + bl_offset/2, kc.poi(i,2) + bl_offset, kc.poi(i,3) + 4*bl_offset, sprintf('POI Error:\n(%.1f, %.1f, %.1f)um\n(%.1f, %.1f, %.1f)urad', 1e3*kc.poi_err(4),1e3*kc.poi_err(5),1e3*kc.poi_err(6),1e6*kc.poi_err(1),1e6*kc.poi_err(2),1e6*kc.poi_err(3)), 'color', 'k')
+    end
     %% Figure Format
     axis square
     axis equal

@@ -22,8 +22,8 @@ fprintf("KC_of.Cerr (um) = \n"), disp(KC_of.C_err*1e3)
 % fprintf("KC_of.poi_err = \n"), disp(KC_of.poi_err)
 % fprintf("KC_of.poi = \n"), disp(KC_of.poi)
     % - Plots
-kc_plot_FBD(KC_of, tg, "KC Free Body Diagram");
-kc_plot_disp(KC_of, tg, "KC Error Displacements");
+% kc_plot_FBD(KC_of, tg, "KC Free Body Diagram");
+% kc_plot_disp(KC_of, tg, "KC Error Displacements");
 % plot_err_exaggerated(KC_og, KC_og.T_GC_BC, T_tot, 10, "Coupling Centroid
 % Error, Exaggerated") % WIP
 

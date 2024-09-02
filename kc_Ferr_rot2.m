@@ -74,6 +74,11 @@ epsZ1 = sqrt((0.5*(Ab(1)*dib(1)+Ab(2)*dib(2)))^2 + (0.5*(Bb(1)*dib(1)+Bb(2)*dib(
 epsZ2 = sqrt((0.5*(Ab(3)*dib(3)+Ab(4)*dib(4)))^2 + (0.5*(Bb(3)*dib(3)+Bb(4)*dib(4)))^2)*sign((Ab(3)*dib(3)+Ab(4)*dib(4)))/sqrt((bO(1,2)-C(1))^2+(bO(2,2)-C(2))^2);
 epsZ3 = sqrt((0.5*(Ab(5)*dib(5)+Ab(6)*dib(6)))^2 + (0.5*(Bb(5)*dib(5)+Bb(6)*dib(6)))^2)*sign((Ab(5)*dib(5)+Ab(6)*dib(6)))/sqrt((bO(1,3)-C(1))^2+(bO(2,3)-C(2))^2);
 epsZ = (epsZ1+epsZ2+epsZ3)/3; % Slocum eq. 7.7.13, p407
+%% Correct Angle Unit
+eps_X = eps_X/1000;
+eps_Y = eps_Y/1000;
+epsZ = epsZ/1000;
+
 %% Solve Error HTM
 T_err = [1 -epsZ eps_Y dC(1);
         epsZ 1 -eps_X dC(2);

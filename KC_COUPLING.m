@@ -1,6 +1,6 @@
 % KC_COUPLING.m
 
-function [kc_g, kc_f, T_Tot] = KC_COUPLING(tg, kc, tl, T_Q)
+function [kc_g, kc_f, T_Tot] = KC_COUPLING(tg, kc, tl, T_input)
 
     %% KC VARIATION SETUP
 Halfa_nom = (kc.Vg / 2) * pi/180; % Half angles of vee groove defined by V_groove_ang
@@ -95,6 +95,15 @@ end
         % Barraja Solution
         kc_g = Rest_Pos(kc, tl, tg);
     end
+    
+    % Apply custom ball center displacements to geometric error case. 
+    if(tg.use_structural_displacement)
+        kc_g = custom_ball_disp(kc_g, kc_g.struct_disp_ball);
+    end
+    if(tg.use_thermal_displacement)
+        kc_g = custom_ball_disp(kc_g, kc_g.therm_disp_ball);
+    end
+
     %% FORCE INDUCED ERRORS (Using Geometric error as input)
     [kc_f, ~, error_msg] = Force_Pos(kc_g, tl, tg);
     %% ERROR MSG
@@ -111,32 +120,27 @@ end
     else
     end
 
-    %% COMBINE ERRORS
-    T_Tot = kc_g.T_GC_BC * kc_f.T_GC_BC * T_Q;
     %% POI Calculations
     % POI error is the error transform to POI with nominal transform removed.
     for i = 1:size(kc.poi,1)
-        kc_g.poi_err(i,:) = extract_HTM_error(Tform(kc.poi(i,:),0)*kc_g.T_GC_BC);
-        kc_f.poi_err(i,:) = extract_HTM_error(Tform(kc.poi(i,:),0)*kc_f.T_GC_BC);
+        % Determine Errored POI's
+        kc_g.Ppoi(i,:) = data_transform(kc_g.T_GC_BC, kc.poi(i,:));
+        kc_f.Ppoi(i,:) = data_transform(kc_f.T_GC_BC, kc.poi(i,:));
+        % Determine Error components at each POI
+        % 1) Apply offset by POI for term.
+        % 2) Apply Error T_GC_BC to solve Errored POI
+        % 3) Subtract POI from Errored POI for Error Components.
+        kc_g.poi_err(i,1:3) = kc_g.C_err(1:3);
+        kc_g.poi_err(i,4:6) = kc_g.Ppoi(i,:) - kc.poi(i,:);
+        kc_f.poi_err(i,1:3) = kc_f.C_err(1:3);
+        kc_f.poi_err(i,4:6) = kc_f.Ppoi(i,:) - kc.poi(i,:);
     end
     %% APPLY TRANSFORMATION TO INPUT CSYS
+    inv_T_input = T_input;
+
     % Apply transform to input, custom, or default Csys
-    kc_g = KC_TRANSFORM(kc_g,T_Q);
-    kc_f = KC_TRANSFORM(kc_f,T_Q);
-    %% DEBUG
-    % for i = 1:6
-    %     disp(kc_f.T_Vees{i})
-    % end
-    % DCC = kc_f.dc
-    % Fcomp = kc_f.RP'.*kc_f.dc
-    % for i = 1:2:6
-    %     j = (i+1)/2;
-    %     Fball(:,j) = Fcomp(:,i) + Fcomp(:,i+1);
-    %     RPball(j) = norm(Fball(:,j));
-    % end
-    % Fball
-    % RPball
-    % RP = kc_f.RP'
-    % kc_plot_FBD(kc_f, tg, "KC Free Body Diagram, INPUT Csys");
+    T_Tot = inv_T_input * kc_g.T_GC_BC * kc_f.T_GC_BC;
+    kc_g = KC_TRANSFORM(kc_g,inv_T_input);
+    kc_f = KC_TRANSFORM(kc_f,inv_T_input);
 
 end

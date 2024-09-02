@@ -66,10 +66,11 @@ end
 % 
 %% GEOMETRY TRANSFORMS
 % Transform input KC to place C at origin.
-kc_in = KC_TRANSFORM(kc_in, Tform(-kc_in.C,0));
+T_in_origin = Tform(-kc_in.C,0);
+kc_in = KC_TRANSFORM(kc_in, T_in_origin);
+
 % Transform KC to rotate to XY plane.
 [kc_inT, tl_inT, T_GC] = KC_TRANSFORM_INPUTS(kc_in, tl_in);
-
 % Rotate inputs back to input cys for verification.
 T_GC_inv = inv(T_GC);
 if(tg.solve_in_custom_csys)
@@ -79,6 +80,7 @@ elseif(tg.solve_in_input_csys)
 else
     T_Q = eye(4);
 end
+kc_inT.T_input = T_Q;
 % 
 %% SOLVE NOMINAL SYSTEM
 % Solves nominal contact points
@@ -100,6 +102,7 @@ if (tg.solve_specific)
     KC_og = kc_sg; KC_of = kc_sf; T_ogf_GC_BC = T_sgf_GC_BC;
 end
 %% MONTECARLO SIMULATION
+% Currently unsupported
 if (tg.solve_montecarlo)
     % Solve Montecarlo
     kc_mc = kc_inT;
@@ -134,8 +137,6 @@ if (tg.solve_force_location_boundary)
 
     kc_plot_input_geometry2(kc_fl_opt, tg, "KC FORCE BOUNDARY");
 end
-%% PRINT AND PLOT RESULTS
-%% SAVE INPUT/RESULTS
 %% COMPLETION
 % Timing
 % if (tg.time_script)
