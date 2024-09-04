@@ -59,7 +59,7 @@ function f = kc_plot_FBD(kc, tg, plot_title)
     end
 
     % Csys Plot Data
-    BC_Csys = uvec_scale * max_dist * data_transform(kc.T_input, COORD()')' + C;
+    BC_Csys = uvec_scale * max_dist * data_transform(kc.T_GC_BC, COORD()')' + C;
 
     
     %% Figure Plots
