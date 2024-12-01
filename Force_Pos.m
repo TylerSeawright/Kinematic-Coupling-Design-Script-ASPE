@@ -1,27 +1,14 @@
-function [kc_load, kc_preload, error_msg] = Force_Pos(kc, tl, tg)
+function [kc_load, error_msg] = Force_Pos(kc, tg)
 %% INITIALIZE INPUTS
 kc_ld = kc; 
 error_msg = zeros(1,3); % Store booleans of three error cases, separation, yield stress, shear stress
 
 % Organize Material Data
-mat1 = kc.Mball; mat2 = kc.Mvee;
 E = [0,0]; v = [0,0]; sig_yield = [0,0];
-E(1) = mat1(1); E(2) = mat2(1); % [N / m^2] Mod of Elasticity
-v(1) = mat1(5); v(2) = mat2(5); % Poisson Ratio
-sig_yield(1) = mat1(3); sig_yield(2) = mat2(3); % [Pa] Yield Strength
-tau_yield(1) = mat1(4); tau_yield(2) = mat2(4); % [Pa] Shear Strength
-
-% Apply tolerances if solving montecarlo or specific case.
-if (tg.solve_montecarlo)
-   kc_ld.Ld.P = normrnd(kc_ld.Ld.P, tl.F_L'/3);
-   kc_ld.Ld.P_loc = normrnd(kc_ld.Ld.P_loc, tl.FL_loc'/3);   
-elseif (tg.solve_specific)
-   kc_ld.Ld.P = kc_ld.Ld.P + tl.F_L';
-   kc_ld.Ld.P_loc = kc_ld.Ld.P_loc + tl.FL_loc';   
-else
-   kc_ld.Ld.P = kc_ld.Ld.P;
-   kc_ld.Ld.P_loc = kc_ld.Ld.P_loc;   
-end
+E(1) = kc.Mball.mod_of_elasticity; E(2) = kc.Mvee.mod_of_elasticity; % [N / m^2] Mod of Elasticity
+v(1) = kc.Mball.poisson_ratio; v(2) = kc.Mvee.poisson_ratio; % Poisson Ratio
+sig_yield(1) = kc.Mball.yield_strength; sig_yield(2) = kc.Mvee.yield_strength; % [Pa] Yield Strength
+tau_yield(1) = kc.Mball.shear_strength; tau_yield(2) = kc.Mvee.shear_strength; % [Pa] Shear Strength
 %% ROTATE KC TO SLOCUM CSYS
 % Rotate data to match Slocum solution form
 rot_ang_slo = -vec_ang(kc_ld.Pb(1:3,1), [0,1,0]'); % Angle between ball 1 and Y axis about Z axis
@@ -103,26 +90,18 @@ if(any(kc.sig_tau_SF <= st_clamp_sf))
     return
 end
 %% SOLVE CLAMP ERROR POSITION AND ROTATION
-[~, T_BC_F_slo, del_C_F, del_b_F] = kc_Ferr_rot2(Del_load_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
-[~, T_BC_F_preload_slo, del_C_preload_slo, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
+[~, T_BC_F_slo, ~, del_b_F] = kc_Ferr_rot2(Del_load_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
+[~, ~, ~, del_b_preload_slo] = kc_Ferr_rot2(Del_preload_slo, kc_ld_slo.dc, kc_ld_slo.C, Pb_slo); % [mm]
 if(tg.subtract_preload_deflection)
-    del_C_load_slo = del_C_F - del_C_preload_slo; % [mm] Solve deflection from only applied load
     del_B_load_slo = del_b_F - del_b_preload_slo; % [mm]
-    del_C_preload_slo = del_C_F; % [mm] 
-    del_B_preload_slo = del_b_F; % [mm]
 else
-    del_C_load_slo = del_C_F; % [mm] Solve deflection from only applied load
     del_B_load_slo = del_b_F; % [mm]
-    del_C_preload_slo = del_C_F;
-    del_B_preload_slo = del_b_F; % [mm]
 end
 %% SOLVE COMBINED ERROR HTM'S
 rest_err_load_slo = [T_BC_F_slo(3,2), T_BC_F_slo(1,3), T_BC_F_slo(2,1),T_BC_F_slo(1:3,4)']; % [urad,um] Rest err is extracted from T_GC_F HTM [a, B, g, x, y, z]
-rest_err_preload_slo = [T_BC_F_preload_slo(3,2), T_BC_F_preload_slo(1,3), T_BC_F_preload_slo(2,1),T_BC_F_preload_slo(1:3,4)'];
 % Rotate Coordinate System Slo to Sol
 T_Sol_slo = inv(T_slo); 
 T_BC_F_load = T_BC_F_slo * T_slo;
-T_BC_F_preload = T_BC_F_preload_slo * T_slo;
 %% DEFINE KC SYSTEMS
 kc_ld_slo.Pb = kc_ld_slo.Pct(1:3,1:3) + del_B_load_slo;
 kc_ld_slo.Pc = kc_ld_slo.Pc;
@@ -135,24 +114,8 @@ kc_ld_slo.dPb = del_B_load_slo;
 kc_ld_slo.C_err = rest_err_load_slo;
 kc_ld_slo.T_GC_BC = T_BC_F_load;
 kc_ld_slo.stiffness = norm(F_L_slo)./(1000*rest_err_load_slo);
-
-% Currently unused, however coded if needed in future.
-kc_preld_slo.Pb = kc_preld_slo.Pct(1:3,1:3) + del_B_preload_slo;
-kc_preld_slo.Pc = kc_preld_slo.Pc;
-kc_preld_slo.C = kc_preld_slo.C + rest_err_preload_slo(4:6)';
-kc_preld_slo.RP = FBc_preload_slo;
-kc_preld_slo.sigma = sig_load_slo;
-kc_preld_slo.tau = sig_tau_load_slo;
-kc_preld_slo.in_bd = Del_preload_slo;
-kc_preld_slo.dPb = del_B_preload_slo;
-kc_preld_slo.C_err = rest_err_preload_slo;
-kc_preld_slo.T_GC_BC = T_BC_F_preload;
-kc_preld_slo.stiffness = norm(F_P_slo)./(1000*rest_err_preload_slo);
-
 %% ROTATE KC SYSTEMS
 kc_load = KC_TRANSFORM(kc_ld_slo, T_Sol_slo);
-kc_preload = KC_TRANSFORM(kc_preld_slo, T_Sol_slo);
-
 %% Verify Sum of Forces
 % F = kc_load.RP
 % Fcomp = kc_load.RP'.*kc_load.dc

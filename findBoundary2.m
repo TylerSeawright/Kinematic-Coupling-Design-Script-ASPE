@@ -29,7 +29,7 @@ function boundaryPoints = findBoundary2(R, step_size, tg, kc, tl, T_Q)
             % end
 
             kc.Ld.P_loc(1:2) = [x,y];
-            [~, kc_nf, ~] = KC_COUPLING(tg, kc, tl, T_Q);
+            [kc_nf] = KC_COUPLING(tg, kc, tl, T_Q);
             result = kc_nf.clamp_separation;
             if result == 1
                 coarseBoundaryPoints = [coarseBoundaryPoints; x, y];

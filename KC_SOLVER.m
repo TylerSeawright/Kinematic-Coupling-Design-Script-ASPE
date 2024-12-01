@@ -1,26 +1,18 @@
 %% FUNCTION DEFINITION
-function [KC_og, KC_of, T_ogf_GC_BC, tg] = KC_SOLVER(tg, kc_in, tl_in, N, T_custom)
+function [kc_tot] = KC_SOLVER(tg, kc_in)
 %% KC_SOLVER.m
-% Revision:     1.2
+% Revision:     1.3
 % Author:       Tyler A. Seawright
 % Created:      10/24/23
-% Last Updated: 5/4/24
+% Last Updated: 11/9/24
 %% AUTHOR'S NOTE
-% This script was created through the work of Dr. Alexander Slocum, Michel
+% This script was created by Tyler Seawright through the work of Dr. Alexander Slocum, Michel
 % Pharand, and Tyler Seawright. With this script, 2D and 3D kinematic
 % couplings consisting of three balls and three vees may be solved. Use to
 % determine contact points, contact forces, contact stresses, deformations, and run sensitivity analyses. 
 % 
 % Edit the config file to change the input parameters. Some features are
-% not supported and those are listed. 
-%% CLEANUP
-% clc, clear, close all
-
-% Timing
-% tic
-%% INPUTS
-% Get all inputs from config file. Edit config file.
-% [tg, kc_in, tl_in, N, T_custom] = config();
+% not supported and are listed. 
 %% BALL CENTER INPUT VERIFICATION
 % Verify ball centers forms a triangle. If a ball falls on the line formed
 % by the two other balls then end script.
@@ -29,7 +21,6 @@ if(~verify_tri(kc_in.Pct))
     return
 end
 %% INIT
-
 % Set all preload forces to equal vectors if toggled.
 if(tg.F_P_is_equal==1)
     for j = 1:3
@@ -43,9 +34,6 @@ if (~tg.canoe_ball) % If canoe ball is not used, set ball R2 to ball R1
    kc_in.Rb2 = kc_in.Db/2;
 end
 
-%% PRE-RUN PRINTS
-% - Verification of Inputs (DEBUG)
-% kc_in.Pct; kc_in.C;
 %% INPUT VERIFICATION DIALOGUE BOX
 % Ask the user whether to continue or not using the dialog box
 if (tg.verify_inputs)
@@ -60,28 +48,26 @@ if (tg.verify_inputs)
     end
 end
 
-% %% GEOMETRY TRANSFORMS
-% % Solve basic Triangle Geometry
-
-% 
 %% GEOMETRY TRANSFORMS
+% Transform KC by custom input coordinate system (See Optional Rotation of
+% KC from Input Csys in Config File)
+kc_in = KC_TRANSFORM(kc_in, kc_in.T_input);
+
 % Transform input KC to place C at origin.
 T_in_origin = Tform(-kc_in.C,0);
 kc_in = KC_TRANSFORM(kc_in, T_in_origin);
 
 % Transform KC to rotate to XY plane.
-[kc_inT, tl_inT, T_GC] = KC_TRANSFORM_INPUTS(kc_in, tl_in);
+[kc_inT, tl_inT, T_GC] = KC_TRANSFORM_INPUTS(kc_in, kc_in.tl);
 % Rotate inputs back to input cys for verification.
 T_GC_inv = inv(T_GC);
-if(tg.solve_in_custom_csys)
-    T_Q = T_GC_inv * T_custom;
-elseif(tg.solve_in_input_csys)
+if(tg.solve_in_input_csys)
     T_Q = T_GC_inv;
 else
     T_Q = eye(4);
 end
-kc_inT.T_input = T_Q;
-% 
+kc_inT.T_input = eye(4);%T_Q;
+
 %% SOLVE NOMINAL SYSTEM
 % Solves nominal contact points
 if (tg.solve_nominal)
@@ -89,59 +75,17 @@ if (tg.solve_nominal)
     tl_nom = KC_TOL; % Set all tolerances to zero.
     kc_nom.Ld = KC_LOAD; % Set all loads to zero.
     kc_nom.Preld = {KC_LOAD, KC_LOAD,KC_LOAD}; % Set all preloads to zero.
-    [kc_ng, kc_nf, T_ngf_GC_BC] = KC_COUPLING(tg, kc_nom, tl_nom, T_Q);
-    KC_og = kc_ng; KC_of = kc_nf; T_ogf_GC_BC = T_ngf_GC_BC;
+    [kc_n_tot] = KC_COUPLING(tg, kc_nom, tl_nom, T_Q);
+    kc_tot = kc_n_tot;
 end
 %% SOLVE SPECIFIC CASE
 if (tg.solve_specific)
     % Solve specific case
     kc_s = kc_inT;
-    [kc_sg, kc_sf, T_sgf_GC_BC] = KC_COUPLING(tg, kc_s, tl_inT, T_Q);
-
-    % Plot Geometry
-    KC_og = kc_sg; KC_of = kc_sf; T_ogf_GC_BC = T_sgf_GC_BC;
-end
-%% MONTECARLO SIMULATION
-% Currently unsupported
-if (tg.solve_montecarlo)
-    % Solve Montecarlo
-    kc_mc = kc_inT;
-    for i = 1:N
-    [kc_mg{i}, kc_mf{i}, T_mgf_GC_BC{i}] = KC_COUPLING(tg, kc_mc, tl_inT, T_Q);
-    end
-    % Statistics
-
-    KC_og = kc_mg; KC_of = kc_mf; T_ogf_GC_BC = T_mgf_GC_BC;
-end
-%% COVARIANCE ERROR SIMULATION
-% Currently unsupported
-if (tg.solve_covariance)
-    % Solve Covariance
-end
-%% OPTIMIZATION PROBLEMS
-% (Recommend remove for use outside of KC_SOLVER function). TS 4/9/23
-% Solve Force Position Boundary that Causes Coupling Separation
-if (tg.solve_force_location_boundary)
-    % Define Optimization KC System
-    kc_fl_opt = kc_inT; kc_fl_opt.Ld.P_loc = kc_fl_opt.C;
-    tg_fl_opt = tg;
-    tl_fl_opt = KC_TOL;
-
-    % Using Polar Coords. Scan from coupling centroid
-    R_step = 100;
-    Theta_step = 36;
-    refine_fac = 1; step_size = [R_step, Theta_step];
-    % Using R-Theta
-    R = norm([kc_fl_opt.Pct(1,:), kc_fl_opt.Pct(2,:)]);
-    boundaryPoints = findBoundary2(R, step_size, tg_fl_opt, kc_fl_opt, tl_fl_opt, T_Q);
-
-    kc_plot_input_geometry2(kc_fl_opt, tg, "KC FORCE BOUNDARY");
+    [kc_s_tot] = KC_COUPLING(tg, kc_s, tl_inT, T_Q);
+    kc_tot = kc_s_tot;
 end
 %% COMPLETION
-% Timing
-% if (tg.time_script)
-%     script_run_time = toc;
-% end
-% disp("Program Ran Successfully")
+% disp("KC_SOLVER() Ran Successfully")
 %% FUNCTION CLOSE
 end

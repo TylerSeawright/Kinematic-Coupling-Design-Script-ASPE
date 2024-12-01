@@ -28,10 +28,13 @@ classdef KC_SYS
       Mvee = zeros(3,6);    % Vee Material holder
       sig_y_SF = 1;         % Compressive stress safety factor
       sig_tau_SF = 1;       % Shear stress safety factor
+      mu = 0;               % Coefficient of friction at contact points.
       
       % Custom ball center displacements
       struct_disp_ball = zeros(3);
       therm_disp_ball = zeros(3);
+      %% TOlERANCES
+      tl = KC_TOL;
       %% INTERMEDIATE VALUES
       % These values are calculated and not to be set by users at any time.
 
@@ -70,6 +73,7 @@ classdef KC_SYS
       T_GC_BC = eye(4);     % Transform between ball and groove coordinate systems (total error)
       T_Vees = cell(6,1);   % Trasform matrices describing groove plane position and orientation
       stiffness = zeros(1,6); % Stiffness for each DOF
-      T_input = zeros(4);   % Input rotation of coupling to rotate back to input coord sys.
+      T_input = eye(4);     % Input rotation of coupling to rotate back to input coord sys.
+      repeatability = 0;    % Coupling repeatability considering friction forces.
    end
 end

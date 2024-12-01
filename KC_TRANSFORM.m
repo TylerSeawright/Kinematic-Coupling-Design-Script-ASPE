@@ -89,7 +89,7 @@ function kco = KC_TRANSFORM(kci, T)
     kco.C_err(4:6) = data_transform(T,kci.C_err(4:6));
     kco.T_GC_BC = T * kci.T_GC_BC;
     for i = 1:6
-        kco.T_Vees{i} = Tr * kci.T_Vees{i};
+        kco.T_Vees{i} = T * kci.T_Vees{i};
     end
     % kco.stiffness(1:3) = data_transform(T,kci.stiffness(1:3));
     % kco.stiffness(4:6) = data_transform(Tr,kci.stiffness(4:6));
